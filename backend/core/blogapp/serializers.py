@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 
 
 class PostSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         fields = (

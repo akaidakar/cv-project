@@ -18,14 +18,10 @@ from rest_framework import permissions
 
 
 class IsPremium(permissions.BasePermission):
-    """
-    Custom permission to only allow users with a 'premium' subscription to access certain views.
-    """
 
     def has_permission(self, request, view):
-        # Ensure the user is authenticated
+
         if not request.user.is_authenticated:
             return False
 
-        # Check if the user has a 'premium' subscription
         return getattr(request.user, "subscription", None) == "premium"
