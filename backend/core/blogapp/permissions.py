@@ -14,9 +14,6 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         return obj.author == request.user
 
 
-from rest_framework import permissions
-
-
 class IsPremium(permissions.BasePermission):
 
     def has_permission(self, request, view):

@@ -17,7 +17,6 @@ class Post(models.Model):
 
 
 class PremiumPost(models.Model):
-    # fmt: off
     blog_post = models.OneToOneField(Post, on_delete=models.CASCADE, default=None)  # PremiumPost is linked to BlogPost
     premium_content = models.TextField()  # Additional content for premium users
     created_at = models.DateTimeField(auto_now_add=True)
