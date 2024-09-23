@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAdminUser
 from .models import Post, PremiumPost
 from .permissions import IsAuthorOrReadOnly, IsPremium
 from .serializers import PostSerializer, UserSerializer, PremiumPostSerializer
+from rest_framework import permissions
 
 # Create your views here.
 

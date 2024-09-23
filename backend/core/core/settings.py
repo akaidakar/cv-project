@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # local
     "blogapp.apps.BlogappConfig",
     "users.apps.UsersConfig",
+    "payment.apps.PaymentConfig",
     "django.contrib.sites",
     # 3rd party
     "rest_framework",
@@ -168,3 +169,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "My project",
     "VERSION": "1.0.0",
 }
+
+STRIPE_PUBLIC_KEY = "pk_test_51Q28XmFCBj1jK1JN1ILOAzz5MPQfstMjjfab1Qj1N2OSzNbk4NolSy50DY2uLdE0crVSlK0KJaktwkCTlUP8QWtl00i59P9zNV"
+STRIPE_SECRET_KEY = "sk_test_51Q28XmFCBj1jK1JNaXWa6cS0NbmjoK0VcCJazMDoBL8GASVVqQsDgXyDyyblp38tfOWh55fHKV5OX4ilniIdiYSr00Rqd8fp0d"
+STRIPE_WEBHOOK_SECRET = ""
