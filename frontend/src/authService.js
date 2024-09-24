@@ -3,7 +3,16 @@ import api from './api';
 
 export const login = async (username, password) => {
   const response = await api.post('dj-rest-auth/login/', { username, password });
-  return response.data;
+  const token = response.data.key;
+
+  // Fetch user details
+  const userResponse = await api.get('dj-rest-auth/user/', {
+    headers: {
+      'Authorization': `Token ${token}`
+    }
+  });
+
+  return { token, user: userResponse.data };
 };
 
 export const register = async (username, email, password1, password2) => {
