@@ -14,7 +14,6 @@ const Register = () => {
     e.preventDefault();
     try {
       await register(username, email, password1, password2);
-      // Registration successful, redirect to login page
       navigate('/login');
     } catch (err) {
       setError('Registration failed. Please check your details.');

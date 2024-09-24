@@ -14,6 +14,7 @@ function App() {
       <Router>
         <Navbar />
         <Routes>
+          <Route path="/" element={<PostList />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route 
