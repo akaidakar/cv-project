@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const { handleLogin } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await handleLogin(username, password);
+      navigate('/posts'); // Redirect to posts page after successful login
     } catch (err) {
       setError('Login failed. Please check your credentials.');
     }
