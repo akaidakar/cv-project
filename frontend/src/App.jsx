@@ -6,6 +6,7 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import PostList from './components/PostList.jsx';
+import CreatePostPage from './pages/CreatePostPage.jsx'; // Add this import
 import PremiumPostList from './components/PremiumPostList.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/toaster';
@@ -22,6 +23,7 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/posts" element={<PostList />} />
+                <Route path="/create-post" element={<CreatePostPage />} /> {/* Add this route */}
                 <Route
                   path="/premium"
                   element={
