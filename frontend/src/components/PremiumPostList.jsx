@@ -11,8 +11,14 @@ export default function PremiumPostList() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPremiumPosts();
-  }, []);
+    if (user) {
+      if (user.is_premium) {
+        fetchPremiumPosts();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [user]);
 
   const fetchPremiumPosts = async () => {
     try {
@@ -39,8 +45,6 @@ export default function PremiumPostList() {
     }
   };
 
-  console.log('Current user:', user);
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -49,11 +53,15 @@ export default function PremiumPostList() {
     return <div>Error: {error}</div>;
   }
 
-  if (!user || user.subscription !== 'premium') {
+  if (!user) {
+    return <div>Please log in to access premium content.</div>;
+  }
+
+  if (!user.is_premium) {
     return (
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">Premium Content</h2>
-        <p className="mb-4">You can read premium blog posts if you buy a subscription.</p>
+        <p className="mb-4">You don't have premium access. You can read premium blog posts if you buy a subscription.</p>
         <Button onClick={() => {/* Navigate to subscription page */}}>
           Get Subscription
         </Button>

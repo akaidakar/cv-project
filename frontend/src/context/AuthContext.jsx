@@ -21,11 +21,11 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchUserData = async (token) => {
+  const fetchUserData = async (authToken) => {
     try {
       const response = await fetch('http://localhost:8000/api/v1/dj-rest-auth/user/', {
         headers: {
-          'Authorization': `Token ${token}`,
+          'Authorization': `Token ${authToken}`,
         },
       });
       if (response.ok) {
@@ -77,9 +77,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  console.log('AuthContext state:', { isAuthenticated, token, user, loading });
+
   return (
     <AuthContext.Provider value={{ isAuthenticated, token, user, login, logout, loading }}>
-      {console.log('AuthContext state:', { isAuthenticated, token, user, loading })}
       {children}
     </AuthContext.Provider>
   );
