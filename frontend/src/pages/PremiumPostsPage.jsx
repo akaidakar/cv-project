@@ -1,63 +1,71 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useAuth } from '../contexts/AuthContext.jsx'; // Ensure the .jsx extension is added
-import { useToast } from '../components/ui/use-toast.jsx';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ui/use-toast';
+import { Button } from '../components/ui/button';
 
 export default function PremiumPostsPage() {
-  const [premiumPosts, setPremiumPosts] = useState([]);
-  const { token } = useAuth();
-  const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    fetchPremiumPosts();
+  }, []);
 
-    fetch('http://localhost:8000/api/v1/premium/', { // Ensure this matches your backend URL
-      headers: {
-        'Authorization': `Token ${token}`
+  const fetchPremiumPosts = async () => {
+    try {
+      const response = await fetch('/api/v1/premium');
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      if (response.status === 403) {
+        console.log('403 error detected');
+        setError('subscription_required');
+      } else if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Error response text:', errorText);
+        throw new Error(`Failed to fetch premium posts: ${response.status}`);
+      } else {
+        const data = await response.json();
+        setPosts(data);
       }
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetched premium posts:', data); // Add this line to debug the response
-        if (Array.isArray(data)) {
-          setPremiumPosts(data);
-        } else {
-          console.error('Unexpected response format:', data);
-          setPremiumPosts([]);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching premium posts:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch premium posts. Please try again.',
-          variant: 'destructive'
-        });
-        setPremiumPosts([]);
-      });
-  }, [token, navigate, toast]);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error === 'subscription_required') {
+    return (
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Premium Content</h2>
+        <p className="mb-4">You can read premium blog posts if you buy a subscription.</p>
+        <Button onClick={() => {/* Navigate to subscription page */}}>
+          Get Subscription
+        </Button>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Premium Posts</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {premiumPosts.map(post => (
-          <Card key={post.id}>
-            <CardHeader>
-              <CardTitle>{post.blog_post?.title || post.title || 'Untitled Post'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">{post.premium_content || post.body || 'No content available'}</p>
-              <p className="text-sm">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <h2 className="text-2xl font-bold mb-4">Premium Posts</h2>
+      {/* Render your premium posts here */}
+      {posts.map(post => (
+        <div key={post.id}>{/* Render post content */}</div>
+      ))}
     </div>
   );
 }

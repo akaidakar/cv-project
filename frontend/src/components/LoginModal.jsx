@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button.jsx';
 import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { useToast } from './ui/use-toast.jsx';
+import { userLogin } from '../authService'; // Import the userLogin function
 
 const LoginModal = ({ onClose }) => {
   const [username, setUsername] = useState('');
@@ -16,22 +17,11 @@ const LoginModal = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/v1/dj-rest-auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
+      const data = await userLogin(username, password); // Use the userLogin function from authService
       console.log(data); // Log the response data
-      if (response.ok) {
-        login({ token: data.key, user: data.user });
-        navigate('/'); // Redirect to homepage after login
-        onClose(); // Close the modal
-      } else {
-        throw new Error(data.message || 'Login failed');
-      }
+      login({ token: data.key, user: data.user });
+      navigate('/'); // Redirect to homepage after login
+      onClose(); // Close the modal
     } catch (error) {
       console.error(error); // Log the error
       toast({

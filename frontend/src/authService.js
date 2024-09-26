@@ -1,18 +1,25 @@
 // src/authService.js
 import api from './api';
 
-export const login = async (username, password) => {
-  const response = await api.post('dj-rest-auth/login/', { username, password });
-  const token = response.data.key;
-
-  // Fetch user details
-  const userResponse = await api.get('dj-rest-auth/user/', {
+export const userLogin = async (username, password) => {
+  console.log('userLogin function called'); // Debug log
+  // Your login logic here
+  const response = await fetch('/api/login', {
+    method: 'POST',
     headers: {
-      'Authorization': `Token ${token}`
-    }
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
   });
 
-  return { token, user: userResponse.data };
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+
+  const data = await response.json();
+  // You might want to save the token in localStorage here
+  localStorage.setItem('token', data.token);
+  return data;
 };
 
 export const register = async (username, email, password1, password2) => {
@@ -26,3 +33,5 @@ export const logout = async () => {
 };
 
 // Add other functions as needed, e.g., password reset, user details, etc.
+
+console.log('authService loaded, userLogin:', userLogin);

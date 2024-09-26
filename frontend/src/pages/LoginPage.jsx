@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button.jsx';
 import { Input } from '../components/ui/input.jsx';
 import { Label } from '../components/ui/label.jsx';
-import { useAuth } from '../contexts/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../components/ui/use-toast.jsx';
 
 export default function LoginPage() {
@@ -15,27 +15,25 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submit button clicked');
     try {
-      const response = await fetch('http://localhost:8000/api/v1/dj-rest-auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      console.log(data); // Log the response data
-      if (response.ok) {
-        login({ token: data.key, user: data.user });
-        navigate('/'); // Redirect to homepage after login
+      console.log('Attempting to login...');
+      const success = await login(username, password);
+      
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'You have successfully logged in.',
+        });
+        navigate('/');
       } else {
-        throw new Error(data.message || 'Login failed');
+        throw new Error('Login failed');
       }
     } catch (error) {
-      console.error(error); // Log the error
+      console.error('Login error:', error);
       toast({
         title: 'Error',
-        description: 'Login failed. Please check your credentials and try again.',
+        description: error.message || 'Login failed. Please try again.',
         variant: 'destructive'
       });
     }
@@ -67,9 +65,6 @@ export default function LoginPage() {
         </div>
         <Button type="submit" className="w-full">Login</Button>
       </form>
-      <p className="mt-4 text-center">
-        Don't have an account? <a href="/register" className="text-blue-500">Sign up</a>
-      </p>
     </div>
   );
 }
