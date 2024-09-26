@@ -20,6 +20,7 @@ class PremiumPost(models.Model):
     blog_post = models.OneToOneField(Post, on_delete=models.CASCADE)
     premium_content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Add this line
 
     def __str__(self):
         return self.blog_post.title

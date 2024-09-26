@@ -5,7 +5,7 @@ from dj_rest_auth.serializers import UserDetailsSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
-    # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    author = serializers.CharField(source="author.username", read_only=True)
 
     class Meta:
         fields = (
@@ -41,6 +41,7 @@ class PremiumPostSerializer(serializers.ModelSerializer):
             "premium_content",
             "author",
             "created_at",
+            "updated_at",
         ]
 
 
