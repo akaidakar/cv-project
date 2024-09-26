@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.core.validators import RegexValidator
 
 # Create your models here.
@@ -27,6 +26,10 @@ class CustomUser(AbstractUser):
     subscription = models.CharField(
         max_length=10, choices=SUBSCRIPTION_CHOICES, default=FREE
     )
+
+    @property
+    def is_premium(self):
+        return self.subscription == PREMIUM
 
     def __str__(self):
         return self.username

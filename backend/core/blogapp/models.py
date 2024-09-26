@@ -17,10 +17,9 @@ class Post(models.Model):
 
 
 class PremiumPost(models.Model):
-    blog_post = models.OneToOneField(Post, on_delete=models.CASCADE, default=None)  # PremiumPost is linked to BlogPost
-    premium_content = models.TextField()  # Additional content for premium users
+    blog_post = models.OneToOneField(Post, on_delete=models.CASCADE)
+    premium_content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.blog_post.title

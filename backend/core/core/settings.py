@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-xc@=xf9o5g8w7trhz2(y757chj5k3n&h!=0_ugvawgles2&@9_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -141,6 +141,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.CustomUser"
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -176,3 +177,7 @@ SPECTACULAR_SETTINGS = {
 STRIPE_PUBLIC_KEY = "pk_test_51Q28XmFCBj1jK1JN1ILOAzz5MPQfstMjjfab1Qj1N2OSzNbk4NolSy50DY2uLdE0crVSlK0KJaktwkCTlUP8QWtl00i59P9zNV"
 STRIPE_SECRET_KEY = "sk_test_51Q28XmFCBj1jK1JNaXWa6cS0NbmjoK0VcCJazMDoBL8GASVVqQsDgXyDyyblp38tfOWh55fHKV5OX4ilniIdiYSr00Rqd8fp0d"
 STRIPE_WEBHOOK_SECRET = ""
+
+REST_AUTH = {
+    "USER_DETAILS_SERIALIZER": "blogapp.serializers.CustomUserDetailsSerializer",
+}
