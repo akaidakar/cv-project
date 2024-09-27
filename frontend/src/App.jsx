@@ -5,8 +5,9 @@ import { UserProvider } from './context/UserContext';
 import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx'; // Add this import
 import PostList from './components/PostList.jsx';
-import CreatePostPage from './pages/CreatePostPage.jsx'; // Add this import
+import CreatePostPage from './pages/CreatePostPage.jsx';
 import PremiumPostList from './components/PremiumPostList.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/toaster';
@@ -22,8 +23,9 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} /> {/* Add this route */}
                 <Route path="/posts" element={<PostList />} />
-                <Route path="/create-post" element={<CreatePostPage />} /> {/* Add this route */}
+                <Route path="/create-post" element={<CreatePostPage />} />
                 <Route
                   path="/premium"
                   element={

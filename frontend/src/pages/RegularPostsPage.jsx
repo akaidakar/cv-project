@@ -5,7 +5,7 @@ export default function RegularPostsPage() {
   const [posts, setPosts] = useState([])
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/posts/') // Ensure this matches your backend URL
+    fetch('http://localhost:8000//') // Ensure this matches your backend URL
       .then(response => response.json())
       .then(data => {
         console.log('Fetched posts:', data); // Add this line to debug the response

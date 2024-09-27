@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Add Link import
 import { Button } from '../components/ui/button.jsx';
 import { Input } from '../components/ui/input.jsx';
 import { Label } from '../components/ui/label.jsx';
@@ -65,6 +65,10 @@ export default function LoginPage() {
         </div>
         <Button type="submit" className="w-full">Login</Button>
       </form>
+      {/* Add the registration link here */}
+      <div className="mt-4 text-center">
+        <p>Don't have an account? <Link to="/register" className="text-blue-600 hover:underline">Register here</Link></p>
+      </div>
     </div>
   );
 }

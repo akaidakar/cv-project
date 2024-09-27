@@ -4,34 +4,19 @@ import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import api from '../api';  // Import the api instance
 
 const CreatePostPage = () => {
   const [newPost, setNewPost] = useState({ title: '', body: '' });
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   const handleCreate = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/posts/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`, // Changed from Bearer to Token
-        },
-        body: JSON.stringify(newPost),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server response:', errorData);
-        throw new Error(`Failed to create post: ${response.status} ${response.statusText}`);
-      }
-      
-      const createdPost = await response.json();
-      console.log('Created post:', createdPost);
+      const response = await api.post('posts/', newPost);
+      console.log('Created post:', response.data);
       navigate('/posts');
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error creating post:', error.response?.data || error.message);
       // You can add user feedback here, e.g., using a toast notification
     }
   };
