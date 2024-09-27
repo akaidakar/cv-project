@@ -41,6 +41,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class PremiumPostViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsPremium]
     queryset = PremiumPost.objects.all()
     serializer_class = PremiumPostSerializer
+    permission_classes = [IsAuthenticated, IsPremium]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)

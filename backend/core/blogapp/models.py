@@ -1,14 +1,17 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from .permissions import IsAuthorOrReadOnly
 
 # Create your models here.
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=50)
-    body = models.TextField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)  # Increased to 200
+    content = models.TextField()  # Changed from 'body' to 'content'
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -17,10 +20,23 @@ class Post(models.Model):
 
 
 class PremiumPost(models.Model):
-    blog_post = models.OneToOneField(Post, on_delete=models.CASCADE)
-    premium_content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)  # Add this line
+    title = models.CharField(max_length=200, default="Untitled Premium Post")
+    content = models.TextField(default="")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,  # Change this to SET_NULL
+        related_name="premium_posts",
+        null=True,  # Keep this as nullable for now
+        blank=True,  # Allow blank in forms
+    )
+    created_at = models.DateTimeField(default=timezone.now)  # Add this line
+    updated_at = models.DateTimeField(default=timezone.now)  # Changed this line
 
     def __str__(self):
-        return self.blog_post.title
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
+        return super(PremiumPost, self).save(*args, **kwargs)

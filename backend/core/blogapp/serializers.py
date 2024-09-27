@@ -5,17 +5,18 @@ from dj_rest_auth.serializers import UserDetailsSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = serializers.CharField(source="author.username", read_only=True)
+    author = serializers.ReadOnlyField(source="author.username")
 
     class Meta:
-        fields = (
-            "id",
-            "author",
-            "title",
-            "body",
-            "created_at",
-        )
         model = Post
+        fields = [
+            "id",
+            "title",
+            "content",
+            "author",
+            "created_at",
+            "updated_at",
+        ]  # Changed 'body' to 'content'
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,17 +29,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PremiumPostSerializer(serializers.ModelSerializer):
-    title = serializers.CharField(source="blog_post.title", read_only=True)
-    body = serializers.CharField(source="blog_post.body", read_only=True)
-    author = serializers.CharField(source="blog_post.author.username", read_only=True)
+    author = serializers.ReadOnlyField(source="author.username")
 
     class Meta:
         model = PremiumPost
         fields = [
             "id",
             "title",
-            "body",
-            "premium_content",
+            "content",
             "author",
             "created_at",
             "updated_at",
