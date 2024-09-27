@@ -11,6 +11,8 @@ import CreatePostPage from './pages/CreatePostPage.jsx';
 import PremiumPostList from './components/PremiumPostList.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/toaster';
+import CreatePremiumPostPage from './pages/CreatePremiumPostPage';
+import PremiumPostsPage from './pages/PremiumPostsPage'; // Add this import
 
 export default function App() {
   return (
@@ -26,14 +28,8 @@ export default function App() {
                 <Route path="/register" element={<RegisterPage />} /> {/* Add this route */}
                 <Route path="/posts" element={<PostList />} />
                 <Route path="/create-post" element={<CreatePostPage />} />
-                <Route
-                  path="/premium"
-                  element={
-                    <ProtectedRoute requirePremium>
-                      <PremiumPostList />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/premium" element={<PremiumPostsPage />} />
+                <Route path="/create-premium-post" element={<CreatePremiumPostPage />} />
               </Routes>
             </main>
             <Toaster />
