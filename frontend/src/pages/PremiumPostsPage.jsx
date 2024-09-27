@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Button } from '../components/ui/button';
+import { useNavigate } from 'react-router-dom'; // Add this import
 
 export default function PremiumPostsPage() {
   const [posts, setPosts] = useState([]);
@@ -9,6 +10,7 @@ export default function PremiumPostsPage() {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPremiumPosts();
@@ -16,16 +18,17 @@ export default function PremiumPostsPage() {
 
   const fetchPremiumPosts = async () => {
     try {
-      const response = await fetch('/api/v1/premium');
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/v1/premium/', {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (response.status === 403) {
-        console.log('403 error detected');
         setError('subscription_required');
       } else if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response text:', errorText);
         throw new Error(`Failed to fetch premium posts: ${response.status}`);
       } else {
         const data = await response.json();
@@ -34,6 +37,11 @@ export default function PremiumPostsPage() {
     } catch (error) {
       console.error('Fetch error:', error);
       setError(error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -48,7 +56,7 @@ export default function PremiumPostsPage() {
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">Premium Content</h2>
         <p className="mb-4">You can read premium blog posts if you buy a subscription.</p>
-        <Button onClick={() => {/* Navigate to subscription page */}}>
+        <Button onClick={() => navigate('/subscription')}>
           Get Subscription
         </Button>
       </div>
@@ -64,7 +72,10 @@ export default function PremiumPostsPage() {
       <h2 className="text-2xl font-bold mb-4">Premium Posts</h2>
       {/* Render your premium posts here */}
       {posts.map(post => (
-        <div key={post.id}>{/* Render post content */}</div>
+        <div key={post.id} className="mb-4">
+          <h3 className="text-xl font-semibold">{post.title}</h3>
+          <p>{post.content}</p>
+        </div>
       ))}
     </div>
   );
