@@ -7,11 +7,12 @@ import { Input } from '../components/ui/input';
 import api from '../api';  // Import the api instance
 
 const CreatePostPage = () => {
-  const [newPost, setNewPost] = useState({ title: '', body: '' });
+  const [newPost, setNewPost] = useState({ title: '', content: '' });  // Changed 'body' to 'content'
   const navigate = useNavigate();
 
   const handleCreate = async () => {
     try {
+      console.log('Sending post data:', newPost);  // Log the data being sent
       const response = await api.post('posts/', newPost);
       console.log('Created post:', response.data);
       navigate('/posts');
@@ -36,9 +37,9 @@ const CreatePostPage = () => {
             className="mb-4"
           />
           <textarea
-            placeholder="Body"
-            value={newPost.body}
-            onChange={(e) => setNewPost({...newPost, body: e.target.value})}
+            placeholder="Content"  // Changed from 'Body' to 'Content'
+            value={newPost.content}  // Changed from 'body' to 'content'
+            onChange={(e) => setNewPost({...newPost, content: e.target.value})}  // Changed from 'body' to 'content'
             className="w-full p-2 border rounded mb-4"
             rows={5}
           />
