@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from payment.views import CreateCheckoutSessionView, StripeWebhookView
+from rest_framework.authtoken import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -18,9 +19,10 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path(
-        "api/create-checkout-session/",
+        "api/v1/create-checkout-session/",
         CreateCheckoutSessionView.as_view(),
         name="create-checkout-session",
     ),
-    path("api/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
+    path("api/stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
+    path("api-token-auth/", views.obtain_auth_token),
 ]

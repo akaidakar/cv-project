@@ -1,19 +1,28 @@
-import stripe
-
-from django.shortcuts import render
 from django.conf import settings
-from django.http import JsonResponse
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated, AllowAny
+import stripe
+from users.models import CustomUser
+import logging
+import json
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+logger = logging.getLogger(__name__)
 
-class CreateCheckoutSessionView(View):
+
+class CreateCheckoutSessionView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-        YOUR_DOMAIN = "http://localhost:8000"
+        logger.info(
+            f"User {request.user.username} (ID: {request.user.id}) is attempting to create a checkout session"
+        )
+        logger.info(f"Authentication: {request.auth}")
+
+        YOUR_DOMAIN = settings.FRONTEND_URL
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[
@@ -22,39 +31,70 @@ class CreateCheckoutSessionView(View):
                         "currency": "usd",
                         "product_data": {"name": "Premium Subscription"},
                         "recurring": {"interval": "month"},
-                        "unit_amount": 400,
+                        "unit_amount": 299,
                     },
                     "quantity": 1,
                 },
             ],
             mode="subscription",
-            success_url=YOUR_DOMAIN + "/success/",
-            cancel_url=YOUR_DOMAIN + "/cancel/",
+            success_url=YOUR_DOMAIN
+            + "/subscription/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=YOUR_DOMAIN + "/subscription/cancel/",
+            client_reference_id=str(request.user.id),
         )
-        return JsonResponse({"id": checkout_session.id})
+        return Response({"id": checkout_session.id})
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class StripeWebhookView(View):
-    def post(self, request, *args, **kwargs):
+class StripeWebhookView(APIView):
+    permission_classes = [AllowAny]  # Allow any request to access this view
+    authentication_classes = []  # Disable authentication for this view
+
+    def post(self, request, format=None):
         payload = request.body
         sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
         event = None
+
+        logger.info(f"Received webhook: {json.loads(payload)}")
 
         try:
             event = stripe.Webhook.construct_event(
                 payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
             )
         except ValueError as e:
-            return JsonResponse({"status": "invalid payload"}, status=400)
+            logger.error(f"Invalid payload: {e}")
+            return HttpResponse(status=400)
         except stripe.error.SignatureVerificationError as e:
-            return JsonResponse({"status": "invalid signature"}, status=400)
+            logger.error(f"Invalid signature: {e}")
+            return HttpResponse(status=400)
+
+        logger.info(f"Webhook event type: {event['type']}")
 
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
-            customer_email = session["customer_details"]["email"]
-            user = get_user_model().objects.get(email=customer_email)
-            user.subscription = "premium"
-            user.save()
+            logger.info(f"Checkout session completed: {json.dumps(session, indent=2)}")
 
-        return JsonResponse({"status": "success"}, status=200)
+            user_id = session.get("client_reference_id")
+            logger.info(f"User ID from session: {user_id}")
+
+            if user_id:
+                try:
+                    user = CustomUser.objects.get(id=user_id)
+                    logger.info(f"Found user: {user.username} (ID: {user.id})")
+                    logger.info(f"Current subscription: {user.subscription}")
+                    new_subscription = user.upgrade_to_premium()
+                    logger.info(f"Upgraded user to premium: {new_subscription}")
+
+                    # Verify the change was saved
+                    user.refresh_from_db()
+                    logger.info(f"User subscription after refresh: {user.subscription}")
+                except CustomUser.DoesNotExist:
+                    logger.error(f"User with id {user_id} not found")
+            else:
+                logger.error("No client_reference_id found in the session")
+
+        return HttpResponse(status=200)

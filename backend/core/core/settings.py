@@ -154,14 +154,15 @@ CSRF_TRUSTED_ORIGINS = ["https://localhost:3000", "http://127.0.0.1:3000"]
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -176,8 +177,17 @@ SPECTACULAR_SETTINGS = {
 
 STRIPE_PUBLIC_KEY = "pk_test_51Q28XmFCBj1jK1JN1ILOAzz5MPQfstMjjfab1Qj1N2OSzNbk4NolSy50DY2uLdE0crVSlK0KJaktwkCTlUP8QWtl00i59P9zNV"
 STRIPE_SECRET_KEY = "sk_test_51Q28XmFCBj1jK1JNaXWa6cS0NbmjoK0VcCJazMDoBL8GASVVqQsDgXyDyyblp38tfOWh55fHKV5OX4ilniIdiYSr00Rqd8fp0d"
-STRIPE_WEBHOOK_SECRET = ""
+STRIPE_WEBHOOK_SECRET = (
+    "whsec_1b8ea08320962a919f149b57c79e6e0228418eb54232b6bb9878bce8c4229794"
+)
 
 REST_AUTH = {
     "USER_DETAILS_SERIALIZER": "blogapp.serializers.CustomUserDetailsSerializer",
 }
+
+FRONTEND_URL = (
+    "http://localhost:3000"  # Adjust if your frontend runs on a different port
+)
+
+# Add this new setting
+STRIPE_WEBHOOK_TOLERANCE = 300  # 5 minutes

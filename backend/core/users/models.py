@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your models here.
 only_letters = RegexValidator(r"^[a-zA-Z]*$", "Only letters are allowed.")
@@ -33,3 +36,8 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def upgrade_to_premium(self):
+        self.subscription = PREMIUM  # Use the module-level constant
+        self.save()
+        return self.subscription
