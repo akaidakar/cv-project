@@ -40,8 +40,11 @@ export default function Navbar() {
 							) : (
 								<span>Welcome, User</span>
 							)}
+							<Button variant="ghost" asChild>
+								<Link to="/subscription">Subscribe</Link>
+							</Button>
 							<Button variant="secondary" onClick={handleLogout}>
-									Sign Out
+								Sign Out
 							</Button>
 						</>
 					) : (
@@ -49,8 +52,8 @@ export default function Navbar() {
 							<Link to="/login">Login</Link>
 						</Button>
 					)}
+					</div>
 				</div>
-			</div>
-		</nav>
-	);
-}
+			</nav>
+		);
+	}

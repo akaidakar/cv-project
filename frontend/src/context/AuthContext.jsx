@@ -11,6 +11,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserData = async () => {
+    try {
+      console.log('Fetching user data...');
+      const response = await api.get('dj-rest-auth/user/');
+      console.log('User data received:', response.data);
+      setUser(response.data);
+      console.log('User state updated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
@@ -21,20 +34,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
-
-  const fetchUserData = async (authToken) => {
-    try {
-      const response = await api.get('dj-rest-auth/user/');
-      const userData = response.data;
-      console.log('Fetched user data:', userData);
-      setUser(userData);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (username, password) => {
     try {
@@ -105,28 +104,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  console.log('AuthContext state:', { isAuthenticated, token, user, loading });
-
   useEffect(() => {
     console.log('AuthContext - Current state:', { isAuthenticated, token });
   }, [isAuthenticated, token]);
-
-  useEffect(() => {
-    if (token) {
-      fetchUserData(token);
-    }
-  }, [token]);
 
   const value = {
     user,
     loading,
     login,
     logout,
-    register, // Make sure register is included here
+    register,
     isAuthenticated: !!token,
+    fetchUserData,
   };
 
-  console.log('AuthContext value:', value); // Add this line
+  console.log('AuthContext value:', value);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
