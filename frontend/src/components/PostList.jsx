@@ -74,13 +74,13 @@ const PostList = () => {
                     className="mb-2"
                   />
                   <textarea
-                    value={editingPost.body}
-                    onChange={(e) => setEditingPost({...editingPost, body: e.target.value})}
+                    value={editingPost.content} // Changed from body to content
+                    onChange={(e) => setEditingPost({...editingPost, content: e.target.value})} // Changed from body to content
                     className="w-full p-2 border rounded mb-2"
                   />
                 </>
               ) : (
-                <p>{post.body}</p>
+                <p>{post.content}</p> // Changed from body to content
               )}
               <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
             </CardContent>
