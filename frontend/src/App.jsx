@@ -22,6 +22,7 @@ import SubscriptionSuccessPage from './pages/SubscriptionSuccessPage';
 import SubscriptionCancelPage from './pages/SubscriptionCancelPage';
 import BlogPostPage from './pages/BlogPostPage';
 import SearchPage from './pages/SearchPage';
+import PremiumBlogPostPage from './pages/PremiumBlogPostPage';
 
 export const stripePromise = loadStripe('your_stripe_publishable_key').catch(err => {
   console.error('Failed to load Stripe:', err);
@@ -50,6 +51,7 @@ export default function App() {
                   <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
                   <Route path="/subscription/cancel" element={<SubscriptionCancelPage />} />
                   <Route path="/search" element={<SearchPage />} />
+                  <Route path="/premium/:id" element={<PremiumBlogPostPage />} />
                 </Routes>
               </AnimatePresence>
             </main>

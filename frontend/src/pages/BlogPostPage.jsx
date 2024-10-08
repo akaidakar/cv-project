@@ -50,7 +50,7 @@ const BlogPostPage = () => {
       
       <AISummary content={post.content} />
       
-      <CommentSection postId={id} />
+      <CommentSection postId={id} isPremium={false} />
     </div>
   );
 };

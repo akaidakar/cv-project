@@ -10,6 +10,7 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    console.log('API Request:', config.method.toUpperCase(), config.url, config.data);
     const token = localStorage.getItem('token');
     console.log('API interceptor - Request URL:', config.url);
     console.log('API interceptor - Token from localStorage:', token);
@@ -22,6 +23,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -29,11 +31,11 @@ api.interceptors.request.use(
 // Response interceptor (keep as is)
 api.interceptors.response.use(
   (response) => {
-    console.log('API response:', response.config.url, response.status, response.data);
+    console.log('API Response:', response.config.method.toUpperCase(), response.config.url, response.status, response.data);
     return response;
   },
   (error) => {
-    console.error('API error:', error.config.url, error.response?.status, error.response?.data);
+    console.error('API Response Error:', error.config?.method.toUpperCase(), error.config?.url, error.response?.status, error.response?.data);
     return Promise.reject(error);
   }
 );

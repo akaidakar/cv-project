@@ -54,6 +54,10 @@ export default function PremiumPostList() {
     }
   };
 
+  const handlePostClick = (id) => {
+    navigate(`/posts/${id}`);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -80,28 +84,32 @@ export default function PremiumPostList() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Premium Posts</h2>
+      <h2 className="text-3xl font-bold mb-6">Premium Posts</h2>
       {posts.length > 0 ? (
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           layout
         >
           <AnimatePresence>
-            {posts.map(post => (
+            {posts.map((post) => (
               <motion.div
                 key={post.id}
                 layout
-                initial={{ opacity: 0, scale: 0.9 }} // Added scale for entrance animation
-                animate={{ opacity: 1, scale: 1 }} // Scale to normal size
-                exit={{ opacity: 0, scale: 0.9 }} // Scale down on exit
-                transition={{ duration: 0.3 }} // Adjust duration as needed
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                <Card className="h-full cursor-pointer transition-transform duration-300 hover:scale-105">
+                <Card 
+                  className="h-full cursor-pointer transition-transform duration-300 hover:scale-105"
+                  onClick={() => handlePostClick(post.id)}
+                >
                   <CardHeader>
                     <CardTitle>{post.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="line-clamp-3">{post.content}</p>
+                    <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
                   </CardContent>
                 </Card>
               </motion.div>

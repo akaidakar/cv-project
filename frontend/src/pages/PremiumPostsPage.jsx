@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Button } from '../components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
 export default function PremiumPostsPage() {
@@ -96,44 +97,60 @@ export default function PremiumPostsPage() {
       
       <Button onClick={() => navigate('/create-premium-post')} className="mb-6">Create New Premium Post</Button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post) => (
-          <Card key={post.id}>
-            <CardHeader>
-              <CardTitle>{post.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {editingPost && editingPost.id === post.id ? (
-                <>
-                  <Input
-                    value={editingPost.title}
-                    onChange={(e) => setEditingPost({...editingPost, title: e.target.value})}
-                    className="mb-2"
-                  />
-                  <textarea
-                    value={editingPost.content}
-                    onChange={(e) => setEditingPost({...editingPost, content: e.target.value})}
-                    className="w-full p-2 border rounded mb-2"
-                  />
-                </>
-              ) : (
-                <p>{post.content}</p>
-              )}
-              <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
-            </CardContent>
-            {user && user.username === post.author && (
-              <CardFooter>
-                {editingPost && editingPost.id === post.id ? (
-                  <Button onClick={() => handleUpdate(post.id)}>Save</Button>
-                ) : (
-                  <Button onClick={() => setEditingPost(post)}>Edit</Button>
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        layout
+      >
+        <AnimatePresence>
+          {posts.map((post) => (
+            <motion.div
+              key={post.id}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="h-full transition-transform duration-300 hover:scale-105">
+                <Link to={`/premium/${post.id}`} className="block">
+                  <CardHeader>
+                    <CardTitle>{post.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {editingPost && editingPost.id === post.id ? (
+                      <>
+                        <Input
+                          value={editingPost.title}
+                          onChange={(e) => setEditingPost({...editingPost, title: e.target.value})}
+                          className="mb-2"
+                        />
+                        <textarea
+                          value={editingPost.content}
+                          onChange={(e) => setEditingPost({...editingPost, content: e.target.value})}
+                          className="w-full p-2 border rounded mb-2"
+                        />
+                      </>
+                    ) : (
+                      <p className="line-clamp-3">{post.content}</p>
+                    )}
+                    <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
+                  </CardContent>
+                </Link>
+                {user && user.username === post.author && (
+                  <CardFooter>
+                    {editingPost && editingPost.id === post.id ? (
+                      <Button onClick={(e) => { e.preventDefault(); handleUpdate(post.id); }}>Save</Button>
+                    ) : (
+                      <Button onClick={(e) => { e.preventDefault(); setEditingPost(post); }}>Edit</Button>
+                    )}
+                    <Button onClick={(e) => { e.preventDefault(); handleDelete(post.id); }} variant="destructive" className="ml-2">Delete</Button>
+                  </CardFooter>
                 )}
-                <Button onClick={() => handleDelete(post.id)} variant="destructive" className="ml-2">Delete</Button>
-              </CardFooter>
-            )}
-          </Card>
-        ))}
-      </div>
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

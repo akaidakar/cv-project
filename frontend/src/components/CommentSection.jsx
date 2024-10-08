@@ -1,24 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-import { Card, CardContent } from './ui/card';
+import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
-const CommentSection = ({ postId }) => {
+const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const { user } = useAuth();
+
+  const handleReply = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+
+    try {
+      const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
+      const response = await api.post(endpoint, { text: replyText, parent: comment.id });
+      console.log('Reply posted successfully:', response.data);
+      onReplyAdded(response.data);
+      setReplyText('');
+      setIsReplying(false);
+    } catch (error) {
+      console.error('Error posting reply:', error.response?.data || error.message);
+    }
+  };
+
+  return (
+    <div className="mb-4 p-4 bg-gray-100 rounded">
+      <p>{comment.text}</p>
+      <p className="text-sm text-gray-500 mt-2">
+        By {comment.author} on {new Date(comment.created_at).toLocaleDateString()}
+      </p>
+      {user && (
+        <Button onClick={() => setIsReplying(!isReplying)} className="mt-2">
+          {isReplying ? 'Cancel' : 'Reply'}
+        </Button>
+      )}
+      {isReplying && (
+        <form onSubmit={handleReply} className="mt-2">
+          <Input
+            type="text"
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder="Write a reply..."
+            className="mb-2"
+          />
+          <Button type="submit">Post Reply</Button>
+        </form>
+      )}
+      {comment.replies && comment.replies.map((reply) => (
+        <Comment
+          key={reply.id}
+          comment={reply}
+          postId={postId}
+          isPremium={isPremium}
+          onReplyAdded={onReplyAdded}
+        />
+      ))}
+    </div>
+  );
+};
+
+const CommentSection = ({ postId, isPremium = false }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
-  const [replyingTo, setReplyingTo] = useState(null);
-
-  console.log('Rendering CommentSection with comments:', comments);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchComments();
-  }, [postId]);
+  }, [postId, isPremium]);
 
   const fetchComments = async () => {
     try {
-      const response = await api.get(`/posts/${postId}/comments/`);
-      console.log('Fetched comments:', response.data);
+      const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
+      const response = await api.get(endpoint);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -27,60 +82,65 @@ const CommentSection = ({ postId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const commentData = {
-      text: newComment,
-      parent: replyingTo
-    };
-    console.log('Sending comment data:', commentData);
+    if (!newComment.trim()) return;
+
     try {
-      const response = await api.post(`/posts/${postId}/comments/`, commentData);
-      console.log('Response:', response.data);
-      setComments(prevComments => {
-        console.log('Previous comments:', prevComments);
-        const updatedComments = [...prevComments, response.data];
-        console.log('Updated comments:', updatedComments);
-        return updatedComments;
-      });
+      const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
+      const response = await api.post(endpoint, { text: newComment });
+      console.log('Comment posted successfully:', response.data);
+      setComments([...comments, response.data]);
       setNewComment('');
-      setReplyingTo(null);
     } catch (error) {
       console.error('Error posting comment:', error.response?.data || error.message);
     }
   };
 
-  const renderComments = (parentId = null, depth = 0) => {
-    return comments
-      .filter(comment => comment.parent === parentId)
-      .map(comment => (
-        <Card key={comment.id} className={`ml-${depth * 4} mb-2`}>
-          <CardContent>
-            <p>{comment.text}</p>
-            <p className="text-sm">By {comment.author} on {new Date(comment.created_at).toLocaleDateString()}</p>
-            <Button onClick={() => setReplyingTo(comment.id)} variant="outline" size="sm">Reply</Button>
-            {renderComments(comment.id, depth + 1)}
-          </CardContent>
-        </Card>
-      ));
+  const handleReplyAdded = (newReply) => {
+    setComments(prevComments => {
+      const updateReplies = (comments) => {
+        return comments.map(comment => {
+          if (comment.id === newReply.parent) {
+            return {
+              ...comment,
+              replies: [...(comment.replies || []), newReply]
+            };
+          } else if (comment.replies) {
+            return {
+              ...comment,
+              replies: updateReplies(comment.replies)
+            };
+          }
+          return comment;
+        });
+      };
+      return updateReplies(prevComments);
+    });
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">Comments</h2>
-      {comments.length > 0 ? renderComments() : <p>No comments yet.</p>}
-      <form onSubmit={handleSubmit} className="mt-4">
-        <Input
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
-          className="mb-2"
+      {comments.map((comment) => (
+        <Comment
+          key={comment.id}
+          comment={comment}
+          postId={postId}
+          isPremium={isPremium}
+          onReplyAdded={handleReplyAdded}
         />
-        <Button type="submit">Post {replyingTo ? 'Reply' : 'Comment'}</Button>
-        {replyingTo && (
-          <Button onClick={() => setReplyingTo(null)} variant="outline" className="ml-2">
-            Cancel Reply
-          </Button>
-        )}
-      </form>
+      ))}
+      {user && (
+        <form onSubmit={handleSubmit} className="mt-4">
+          <Input
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="mb-2"
+          />
+          <Button type="submit">Post Comment</Button>
+        </form>
+      )}
     </div>
   );
 };
