@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from .models import Post, PremiumPost, Comment
+from .models import Post, PremiumPost, Comment, PremiumComment
 from django.contrib.auth import get_user_model
 from dj_rest_auth.serializers import UserDetailsSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -60,6 +63,34 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ["id", "post", "author", "text", "created_at", "updated_at", "parent"]
         read_only_fields = ["id", "author", "created_at", "updated_at", "post"]
 
+    def to_internal_value(self, data):
+        logger.info(f"Raw data received by serializer: {data}")
+        return super().to_internal_value(data)
+
     def create(self, validated_data):
         print("Validated data:", validated_data)
         return super().create(validated_data)
+
+
+class PremiumCommentSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source="author.username")
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PremiumComment
+        fields = [
+            "id",
+            "post",
+            "author",
+            "text",
+            "created_at",
+            "updated_at",
+            "parent",
+            "replies",
+        ]
+        read_only_fields = ["id", "author", "created_at", "updated_at", "post"]
+
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return PremiumCommentSerializer(obj.replies.all(), many=True).data
+        return []

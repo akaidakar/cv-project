@@ -4,7 +4,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from .models import Post, PremiumPost, Comment
+from .models import Post, PremiumPost, Comment, PremiumComment
 from .permissions import IsAuthorOrReadOnly, IsPremium
 from .serializers import (
     PostSerializer,
@@ -12,11 +12,14 @@ from .serializers import (
     PremiumPostSerializer,
     CustomUserDetailsSerializer,
     CommentSerializer,
+    PremiumCommentSerializer,
 )  # Import the custom serializer
 from django.contrib.auth import get_user_model
 import logging
 from rest_framework.response import Response
 from rest_framework.decorators import action
+import json
+from rest_framework.parsers import JSONParser
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +79,7 @@ class PremiumPostViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-
-    def get_queryset(self):
-        post_id = self.kwargs.get("post_id")
-        if post_id:
-            return Comment.objects.filter(post_id=post_id)
-        return Comment.objects.all()
+    parser_classes = [JSONParser]
 
     def create(self, request, *args, **kwargs):
         post_id = self.kwargs.get("post_id")
@@ -103,4 +101,38 @@ class CommentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         logger.error(f"Serializer errors: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUIRED)
+        return Response(
+            {"error": "Invalid data provided", "details": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class PremiumCommentViewSet(viewsets.ModelViewSet):
+    queryset = PremiumComment.objects.all()
+    serializer_class = PremiumCommentSerializer
+    permission_classes = [IsAuthenticated, IsPremium]
+
+    def get_queryset(self):
+        return PremiumComment.objects.filter(post_id=self.kwargs.get("post_id"))
+
+    def perform_create(self, serializer):
+        post = PremiumPost.objects.get(id=self.kwargs.get("post_id"))
+        serializer.save(author=self.request.user, post=post)
+
+    def create(self, request, *args, **kwargs):
+        post_id = self.kwargs.get("post_id")
+        parent_id = request.data.get("parent")
+
+        try:
+            post = PremiumPost.objects.get(id=post_id)
+        except PremiumPost.DoesNotExist:
+            return Response(
+                {"error": "Premium Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(author=request.user, post=post, parent_id=parent_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

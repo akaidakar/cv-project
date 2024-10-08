@@ -1,8 +1,14 @@
 from django.urls import path, include
-from rest_framework.routers import SimpleRouter
-from .views import UserViewSet, PostViewSet, PremiumPostViewSet, CommentViewSet
+from rest_framework.routers import DefaultRouter
+from .views import (
+    UserViewSet,
+    PostViewSet,
+    PremiumPostViewSet,
+    CommentViewSet,
+    PremiumCommentViewSet,
+)
 
-router = SimpleRouter()
+router = DefaultRouter()
 router.register("users", UserViewSet, basename="users")
 router.register("posts", PostViewSet, basename="posts")
 router.register("premium", PremiumPostViewSet, basename="premium_posts")
@@ -13,5 +19,10 @@ urlpatterns = [
         "posts/<int:post_id>/comments/",
         CommentViewSet.as_view({"get": "list", "post": "create"}),
         name="post-comments",
+    ),
+    path(
+        "premium/<int:post_id>/comments/",
+        PremiumCommentViewSet.as_view({"get": "list", "post": "create"}),
+        name="premium-comments",
     ),
 ]
