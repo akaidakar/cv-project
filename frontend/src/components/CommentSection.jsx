@@ -9,13 +9,16 @@ const CommentSection = ({ postId }) => {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
 
+  console.log('Rendering CommentSection with comments:', comments);
+
   useEffect(() => {
     fetchComments();
   }, [postId]);
 
   const fetchComments = async () => {
     try {
-      const response = await api.get(`posts/${postId}/comments/`);
+      const response = await api.get(`/posts/${postId}/comments/`);
+      console.log('Fetched comments:', response.data);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -24,16 +27,24 @@ const CommentSection = ({ postId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const commentData = {
+      text: newComment,
+      parent: replyingTo
+    };
+    console.log('Sending comment data:', commentData);
     try {
-      const response = await api.post(`posts/${postId}/comments/`, {
-        content: newComment,
-        parent: replyingTo
+      const response = await api.post(`/posts/${postId}/comments/`, commentData);
+      console.log('Response:', response.data);
+      setComments(prevComments => {
+        console.log('Previous comments:', prevComments);
+        const updatedComments = [...prevComments, response.data];
+        console.log('Updated comments:', updatedComments);
+        return updatedComments;
       });
-      setComments([...comments, response.data]);
       setNewComment('');
       setReplyingTo(null);
     } catch (error) {
-      console.error('Error posting comment:', error);
+      console.error('Error posting comment:', error.response?.data || error.message);
     }
   };
 
@@ -43,7 +54,7 @@ const CommentSection = ({ postId }) => {
       .map(comment => (
         <Card key={comment.id} className={`ml-${depth * 4} mb-2`}>
           <CardContent>
-            <p>{comment.content}</p>
+            <p>{comment.text}</p>
             <p className="text-sm">By {comment.author} on {new Date(comment.created_at).toLocaleDateString()}</p>
             <Button onClick={() => setReplyingTo(comment.id)} variant="outline" size="sm">Reply</Button>
             {renderComments(comment.id, depth + 1)}
@@ -55,7 +66,7 @@ const CommentSection = ({ postId }) => {
   return (
     <div className="mt-6">
       <h2 className="text-2xl font-bold mb-4">Comments</h2>
-      {renderComments()}
+      {comments.length > 0 ? renderComments() : <p>No comments yet.</p>}
       <form onSubmit={handleSubmit} className="mt-4">
         <Input
           value={newComment}

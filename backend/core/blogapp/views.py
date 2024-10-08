@@ -4,13 +4,14 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from .models import Post, PremiumPost
+from .models import Post, PremiumPost, Comment
 from .permissions import IsAuthorOrReadOnly, IsPremium
 from .serializers import (
     PostSerializer,
     UserSerializer,
     PremiumPostSerializer,
     CustomUserDetailsSerializer,
+    CommentSerializer,
 )  # Import the custom serializer
 from django.contrib.auth import get_user_model
 import logging
@@ -70,3 +71,36 @@ class PremiumPostViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().retrieve(request, *args, **kwargs)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs.get("post_id")
+        if post_id:
+            return Comment.objects.filter(post_id=post_id)
+        return Comment.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        post_id = self.kwargs.get("post_id")
+        logger.info(f"Attempting to create comment for post {post_id}")
+        logger.info(f"Request data: {request.data}")
+
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            logger.error(f"Post with id {post_id} not found")
+            return Response(
+                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(author=request.user, post=post)
+            logger.info("Comment created successfully")
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        logger.error(f"Serializer errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUIRED)

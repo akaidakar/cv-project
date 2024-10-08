@@ -52,7 +52,7 @@ from django.utils.decorators import method_decorator
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(APIView):
     permission_classes = [AllowAny]  # Allow any request to access this view
-    authentication_classes = []  # Disable authentication for this view
+    authentication_classes = []  # Disable authenticatioг for this view
 
     def post(self, request, format=None):
         payload = request.body

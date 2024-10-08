@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/use-toast';
 import { Button } from '../components/ui/button';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'; // Add Card components
+import { motion, AnimatePresence } from 'framer-motion'; // Add framer-motion
 
 export default function PremiumPostList() {
   const [posts, setPosts] = useState([]);
@@ -80,12 +82,32 @@ export default function PremiumPostList() {
     <div>
       <h2 className="text-2xl font-bold mb-4">Premium Posts</h2>
       {posts.length > 0 ? (
-        posts.map(post => (
-          <div key={post.id} className="mb-4">
-            <h3 className="text-xl font-semibold">{post.title}</h3>
-            <p>{post.content}</p>
-          </div>
-        ))
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          layout
+        >
+          <AnimatePresence>
+            {posts.map(post => (
+              <motion.div
+                key={post.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }} // Added scale for entrance animation
+                animate={{ opacity: 1, scale: 1 }} // Scale to normal size
+                exit={{ opacity: 0, scale: 0.9 }} // Scale down on exit
+                transition={{ duration: 0.3 }} // Adjust duration as needed
+              >
+                <Card className="h-full cursor-pointer transition-transform duration-300 hover:scale-105">
+                  <CardHeader>
+                    <CardTitle>{post.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="line-clamp-3">{post.content}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       ) : (
         <p>No premium posts available.</p>
       )}

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, PremiumPost
+from .models import Post, PremiumPost, Comment
 from django.contrib.auth import get_user_model
 from dj_rest_auth.serializers import UserDetailsSerializer
 
@@ -49,3 +49,17 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta(UserDetailsSerializer.Meta):
         fields = UserDetailsSerializer.Meta.fields + ("subscription", "is_premium")
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source="author.username")
+    post = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ["id", "post", "author", "text", "created_at", "updated_at", "parent"]
+        read_only_fields = ["id", "author", "created_at", "updated_at", "post"]
+
+    def create(self, validated_data):
+        print("Validated data:", validated_data)
+        return super().create(validated_data)
