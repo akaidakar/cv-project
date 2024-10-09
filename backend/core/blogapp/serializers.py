@@ -56,20 +56,31 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.username")
-    post = serializers.PrimaryKeyRelatedField(read_only=True)
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ["id", "post", "author", "text", "created_at", "updated_at", "parent"]
+        fields = [
+            "id",
+            "text",
+            "author",
+            "post",
+            "created_at",
+            "updated_at",
+            "parent",
+            "replies",
+        ]
         read_only_fields = ["id", "author", "created_at", "updated_at", "post"]
 
-    def to_internal_value(self, data):
-        logger.info(f"Raw data received by serializer: {data}")
-        return super().to_internal_value(data)
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return CommentSerializer(obj.replies.all(), many=True).data
+        return []
 
-    def create(self, validated_data):
-        print("Validated data:", validated_data)
-        return super().create(validated_data)
+    def validate(self, data):
+        if "text" not in data or not data["text"].strip():
+            raise serializers.ValidationError({"text": "Comment text cannot be empty."})
+        return data
 
 
 class PremiumCommentSerializer(serializers.ModelSerializer):

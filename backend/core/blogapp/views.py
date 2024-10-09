@@ -77,34 +77,40 @@ class PremiumPostViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    parser_classes = [JSONParser]
+
+    def get_queryset(self):
+        post_id = self.kwargs.get("post_id")
+        return Comment.objects.filter(post_id=post_id, parent=None)
+
+    def perform_create(self, serializer):
+        post_id = self.kwargs.get("post_id")
+        parent_id = self.request.data.get("parent")
+        try:
+            post = Post.objects.get(id=post_id)
+            parent = Comment.objects.get(id=parent_id) if parent_id else None
+            serializer.save(author=self.request.user, post=post, parent=parent)
+        except Post.DoesNotExist:
+            raise serializers.ValidationError(f"Post with id {post_id} does not exist")
+        except Comment.DoesNotExist:
+            raise serializers.ValidationError(
+                f"Parent comment with id {parent_id} does not exist"
+            )
 
     def create(self, request, *args, **kwargs):
         post_id = self.kwargs.get("post_id")
-        logger.info(f"Attempting to create comment for post {post_id}")
-        logger.info(f"Request data: {request.data}")
+        data = request.data.copy()
+        data["post"] = post_id
 
-        try:
-            post = Post.objects.get(id=post_id)
-        except Post.DoesNotExist:
-            logger.error(f"Post with id {post_id} not found")
-            return Response(
-                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+        logger.info(f"Received data for comment creation: {data}")
 
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            serializer.save(author=request.user, post=post)
-            logger.info("Comment created successfully")
+            self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         logger.error(f"Serializer errors: {serializer.errors}")
-        return Response(
-            {"error": "Invalid data provided", "details": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PremiumCommentViewSet(viewsets.ModelViewSet):
