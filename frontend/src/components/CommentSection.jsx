@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 
-const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
+const Comment = ({ comment, postId, isPremium, onReplyAdded, depth = 0 }) => {
+  console.log('Rendering comment:', comment); // Add this line
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState('');
   const { user } = useAuth();
@@ -16,7 +16,6 @@ const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
     try {
       const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
       const response = await api.post(endpoint, { text: replyText, parent: comment.id });
-      console.log('Reply posted successfully:', response.data);
       onReplyAdded(response.data);
       setReplyText('');
       setIsReplying(false);
@@ -26,7 +25,7 @@ const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
   };
 
   return (
-    <div className="mb-4 p-4 bg-gray-100 rounded">
+    <div className={`mb-4 p-4 bg-gray-100 rounded ${depth > 0 ? 'ml-4' : ''}`}>
       <p>{comment.text}</p>
       <p className="text-sm text-gray-500 mt-2">
         By {comment.author} on {new Date(comment.created_at).toLocaleDateString()}
@@ -38,12 +37,12 @@ const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
       )}
       {isReplying && (
         <form onSubmit={handleReply} className="mt-2">
-          <Input
-            type="text"
+          <textarea
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply..."
-            className="mb-2"
+            className="w-full p-2 border rounded mb-2"
+            rows="2"
           />
           <Button type="submit">Post Reply</Button>
         </form>
@@ -55,13 +54,14 @@ const Comment = ({ comment, postId, isPremium, onReplyAdded }) => {
           postId={postId}
           isPremium={isPremium}
           onReplyAdded={onReplyAdded}
+          depth={depth + 1}
         />
       ))}
     </div>
   );
 };
 
-const CommentSection = ({ postId, isPremium = false }) => {
+const CommentSection = ({ postId, isPremium }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const { user } = useAuth();
@@ -74,6 +74,7 @@ const CommentSection = ({ postId, isPremium = false }) => {
     try {
       const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
       const response = await api.get(endpoint);
+      console.log('Fetched comments:', response.data); // Add this line
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -87,7 +88,6 @@ const CommentSection = ({ postId, isPremium = false }) => {
     try {
       const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
       const response = await api.post(endpoint, { text: newComment });
-      console.log('Comment posted successfully:', response.data);
       setComments([...comments, response.data]);
       setNewComment('');
     } catch (error) {
@@ -97,33 +97,31 @@ const CommentSection = ({ postId, isPremium = false }) => {
 
   const handleReplyAdded = (newReply) => {
     setComments(prevComments => {
-      const updateReplies = (comments) => {
-        return comments.map(comment => {
-          if (comment.id === newReply.parent) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), newReply]
-            };
-          } else if (comment.replies) {
-            return {
-              ...comment,
-              replies: updateReplies(comment.replies)
-            };
-          }
-          return comment;
-        });
-      };
-      return updateReplies(prevComments);
+      return prevComments.map(comment => {
+        if (comment.id === newReply.parent) {
+          return {
+            ...comment,
+            replies: [...(comment.replies || []), newReply]
+          };
+        }
+        return comment;
+      });
     });
   };
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Comments</h2>
+      <h3 className="text-xl font-bold mb-4">Comments</h3>
       {comments.map((comment) => (
         <Comment
           key={comment.id}
-          comment={comment}
+          comment={{
+            id: comment.id,
+            text: comment.text || comment.content, // Handle both 'text' and 'content' fields
+            author: comment.author || comment.user?.username || 'Anonymous', // Handle different author fields
+            created_at: comment.created_at,
+            replies: comment.replies || []
+          }}
           postId={postId}
           isPremium={isPremium}
           onReplyAdded={handleReplyAdded}
@@ -131,12 +129,12 @@ const CommentSection = ({ postId, isPremium = false }) => {
       ))}
       {user && (
         <form onSubmit={handleSubmit} className="mt-4">
-          <Input
-            type="text"
+          <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="mb-2"
+            placeholder="Write a comment..."
+            className="w-full p-2 border rounded mb-2"
+            rows="4"
           />
           <Button type="submit">Post Comment</Button>
         </form>

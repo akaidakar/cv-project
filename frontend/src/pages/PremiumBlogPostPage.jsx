@@ -7,6 +7,7 @@ import CommentSection from '../components/CommentSection';
 import AISummary from '../components/AISummary';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/use-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const PremiumBlogPostPage = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const PremiumBlogPostPage = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -43,7 +45,11 @@ const PremiumBlogPostPage = () => {
     navigate(`/edit-premium-post/${id}`);
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
       await api.delete(`premium/${id}/`);
       toast({
@@ -58,6 +64,8 @@ const PremiumBlogPostPage = () => {
         description: "Failed to delete post",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -89,7 +97,7 @@ const PremiumBlogPostPage = () => {
         {user && user.username === post.author && (
           <CardFooter>
             <Button onClick={handleEdit} className="mr-2">Edit</Button>
-            <Button onClick={handleDelete} variant="destructive">Delete</Button>
+            <Button onClick={handleDeleteClick} variant="destructive">Delete</Button>
           </CardFooter>
         )}
       </Card>
@@ -97,6 +105,14 @@ const PremiumBlogPostPage = () => {
       <AISummary content={post.content} />
       
       <CommentSection postId={id} isPremium={true} />
+      
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+      />
     </div>
   );
 };

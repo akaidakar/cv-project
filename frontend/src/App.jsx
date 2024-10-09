@@ -23,6 +23,8 @@ import SubscriptionCancelPage from './pages/SubscriptionCancelPage';
 import BlogPostPage from './pages/BlogPostPage';
 import SearchPage from './pages/SearchPage';
 import PremiumBlogPostPage from './pages/PremiumBlogPostPage';
+import EditPostPage from './pages/EditPostPage'; // Create this component if it doesn't exist
+import EditPremiumPostPage from './pages/EditPremiumPostPage';
 
 export const stripePromise = loadStripe('your_stripe_publishable_key').catch(err => {
   console.error('Failed to load Stripe:', err);
@@ -44,6 +46,7 @@ export default function App() {
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/posts" element={<PostList />} />
                   <Route path="/posts/:id" element={<BlogPostPage />} />
+                  <Route path="/edit-post/:id" element={<EditPostPage />} /> {/* Add this line */}
                   <Route path="/create-post" element={<CreatePostPage />} />
                   <Route path="/premium" element={<PremiumPostsPage />} />
                   <Route path="/create-premium-post" element={<CreatePremiumPostPage />} />
@@ -52,6 +55,7 @@ export default function App() {
                   <Route path="/subscription/cancel" element={<SubscriptionCancelPage />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/premium/:id" element={<PremiumBlogPostPage />} />
+                  <Route path="/edit-premium-post/:id" element={<EditPremiumPostPage />} />
                 </Routes>
               </AnimatePresence>
             </main>

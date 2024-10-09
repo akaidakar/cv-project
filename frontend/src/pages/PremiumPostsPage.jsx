@@ -4,7 +4,6 @@ import { useToast } from '../components/ui/use-toast';
 import { Button } from '../components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
-import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
@@ -15,7 +14,6 @@ export default function PremiumPostsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [editingPost, setEditingPost] = useState(null);
 
   useEffect(() => {
     fetchPremiumPosts();
@@ -38,40 +36,27 @@ export default function PremiumPostsPage() {
     }
   };
 
-  const handleUpdate = async (id) => {
-    try {
-      const response = await api.put(`premium/${id}/`, editingPost);
-      setPosts(posts.map(post => post.id === id ? response.data : post));
-      setEditingPost(null);
-      toast({
-        title: "Success",
-        description: "Post updated successfully",
-      });
-    } catch (error) {
-      console.error('Error updating post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update post",
-        variant: "destructive",
-      });
-    }
+  const handleEdit = (post) => {
+    navigate(`/edit-premium-post/${post.id}`);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`premium/${id}/`);
-      setPosts(posts.filter(post => post.id !== id));
-      toast({
-        title: "Success",
-        description: "Post deleted successfully",
-      });
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete post",
-        variant: "destructive",
-      });
+  const handleDelete = async (postId) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await api.delete(`premium/${postId}/`);
+        setPosts(posts.filter(post => post.id !== postId));
+        toast({
+          title: "Success",
+          description: "Post deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete post",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -95,7 +80,9 @@ export default function PremiumPostsPage() {
     <div>
       <h1 className="text-3xl font-bold mb-6">Premium Posts</h1>
       
-      <Button onClick={() => navigate('/create-premium-post')} className="mb-6">Create New Premium Post</Button>
+      <Link to="/create-premium-post">
+        <Button className="mb-6">Create New Premium Post</Button>
+      </Link>
 
       <motion.div 
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -112,37 +99,18 @@ export default function PremiumPostsPage() {
               transition={{ duration: 0.5 }}
             >
               <Card className="h-full transition-transform duration-300 hover:scale-105">
-                <Link to={`/premium/${post.id}`} className="block">
+                <Link to={`/premium/${post.id}`} className="block h-full">
                   <CardHeader>
                     <CardTitle>{post.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {editingPost && editingPost.id === post.id ? (
-                      <>
-                        <Input
-                          value={editingPost.title}
-                          onChange={(e) => setEditingPost({...editingPost, title: e.target.value})}
-                          className="mb-2"
-                        />
-                        <textarea
-                          value={editingPost.content}
-                          onChange={(e) => setEditingPost({...editingPost, content: e.target.value})}
-                          className="w-full p-2 border rounded mb-2"
-                        />
-                      </>
-                    ) : (
-                      <p className="line-clamp-3">{post.content}</p>
-                    )}
+                    <p className="line-clamp-3">{post.content}</p>
                     <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
                   </CardContent>
                 </Link>
                 {user && user.username === post.author && (
                   <CardFooter>
-                    {editingPost && editingPost.id === post.id ? (
-                      <Button onClick={(e) => { e.preventDefault(); handleUpdate(post.id); }}>Save</Button>
-                    ) : (
-                      <Button onClick={(e) => { e.preventDefault(); setEditingPost(post); }}>Edit</Button>
-                    )}
+                    <Button onClick={(e) => { e.preventDefault(); handleEdit(post); }}>Edit</Button>
                     <Button onClick={(e) => { e.preventDefault(); handleDelete(post.id); }} variant="destructive" className="ml-2">Delete</Button>
                   </CardFooter>
                 )}

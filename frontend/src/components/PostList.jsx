@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/card';
+import PostCard from './PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PostList = () => {
@@ -29,8 +29,20 @@ const PostList = () => {
     }
   };
 
-  const handlePostClick = (id) => {
-    navigate(`/posts/${id}`);
+  const handleEdit = (post) => {
+    navigate(`/edit-post/${post.id}`);
+  };
+
+  const handleDelete = async (postId) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await api.delete(`posts/${postId}/`);
+        setPosts(posts.filter(post => post.id !== postId));
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        setError(`Failed to delete post. Error: ${error.message}`);
+      }
+    }
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -58,18 +70,11 @@ const PostList = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card 
-                className="h-full cursor-pointer transition-transform duration-300 hover:scale-105"
-                onClick={() => handlePostClick(post.id)}
-              >
-                <CardHeader>
-                  <CardTitle>{post.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="line-clamp-3">{post.content}</p>
-                  <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
-                </CardContent>
-              </Card>
+              <PostCard 
+                post={post}
+                onEdit={() => handleEdit(post)}
+                onDelete={() => handleDelete(post.id)}
+              />
             </motion.div>
           ))}
         </AnimatePresence>
