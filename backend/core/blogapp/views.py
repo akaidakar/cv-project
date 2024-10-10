@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import (
     IsAdminUser,
     IsAuthenticated,
@@ -20,6 +20,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 import json
 from rest_framework.parsers import JSONParser
+from elasticsearch_dsl import Q
+from .search_indexes import PostDocument, PremiumPostDocument
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +55,11 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+
+class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = CustomUserDetailsSerializer
 
 
 class PremiumPostViewSet(viewsets.ModelViewSet):
@@ -145,3 +156,41 @@ class PremiumCommentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+def search_posts(request):
+    query = request.GET.get("q", "")
+    author = request.GET.get("author", "")
+
+    if not query:
+        return Response({"results": []})
+
+    # Create a Q object for the search query
+    search_query = Q(title__icontains=query) | Q(content__icontains=query)
+
+    # If an author is specified, add it to the query
+    if author:
+        search_query &= Q(author__username=author)
+
+    # Search regular posts
+    regular_posts = Post.objects.filter(search_query)
+
+    # Search premium posts if the user is authenticated and premium
+    if request.user.is_authenticated and request.user.is_premium:
+        premium_posts = PremiumPost.objects.filter(search_query)
+    else:
+        premium_posts = PremiumPost.objects.none()
+
+    # Combine and serialize results
+    regular_results = PostSerializer(regular_posts, many=True).data
+    premium_results = PremiumPostSerializer(premium_posts, many=True).data
+
+    combined_results = regular_results + premium_results
+
+    # Sort combined results by created_at (assuming both models have this field)
+    sorted_results = sorted(
+        combined_results, key=lambda x: x["created_at"], reverse=True
+    )
+
+    return Response({"results": sorted_results})

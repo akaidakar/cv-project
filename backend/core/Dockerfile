@@ -1,4 +1,4 @@
-# Use an official Python runtime as a parent image
+# Use Python 3.9
 FROM python:3.9-slim
 
 # Set environment variables
@@ -10,14 +10,15 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    default-jdk \
     gcc \
-    postgresql-client \
     libpq-dev \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install pip==23.0.1 && pip install -r requirements.txt
 
 # Copy project
 COPY . /app/

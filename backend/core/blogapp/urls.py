@@ -2,14 +2,17 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet,
+    AuthorViewSet,
     PostViewSet,
     PremiumPostViewSet,
     CommentViewSet,
     PremiumCommentViewSet,
+    search_posts,
 )
 
 router = DefaultRouter()
 router.register("users", UserViewSet, basename="users")
+router.register("authors", AuthorViewSet, basename="authors")
 router.register("posts", PostViewSet, basename="posts")
 router.register("premium", PremiumPostViewSet, basename="premium_posts")
 
@@ -25,4 +28,5 @@ urlpatterns = [
         PremiumCommentViewSet.as_view({"get": "list", "post": "create"}),
         name="premium-comments",
     ),
+    path("search/", search_posts, name="search_posts"),
 ]

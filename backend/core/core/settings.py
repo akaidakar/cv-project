@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
     "drf_spectacular",
+    "django_elasticsearch_dsl",
 ]
 
 MIDDLEWARE = [
@@ -163,7 +164,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
@@ -233,3 +234,19 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+from elasticsearch_dsl import connections
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    "default": {
+        "hosts": f"{os.environ.get('ELASTICSEARCH_HOST', 'localhost')}:{os.environ.get('ELASTICSEARCH_PORT', '9200')}"
+    },
+}
+
+# Create the Elasticsearch connection
+connections.create_connection(**ELASTICSEARCH_DSL["default"])
+
+# If not already present, add 'django_elasticsearch_dsl' to INSTALLED_APPS
+if "django_elasticsearch_dsl" not in INSTALLED_APPS:
+    INSTALLED_APPS += ["django_elasticsearch_dsl"]
