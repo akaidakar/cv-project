@@ -78,6 +78,7 @@ class PremiumPostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         post_id = self.kwargs.get("post_id")
@@ -98,18 +99,20 @@ class CommentViewSet(viewsets.ModelViewSet):
             )
 
     def create(self, request, *args, **kwargs):
-        post_id = self.kwargs.get("post_id")
-        data = request.data.copy()
-        data["post"] = post_id
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required to post comments."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
 
-        logger.info(f"Received data for comment creation: {data}")
-
-        serializer = self.get_serializer(data=data)
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def reply(self, request, pk=None, post_id=None):
+        parent_comment = self.get_object()
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            self.perform_create(serializer)
+            serializer.save(author=request.user, post_id=post_id, parent=parent_comment)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        logger.error(f"Serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

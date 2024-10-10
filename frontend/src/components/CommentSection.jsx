@@ -30,7 +30,7 @@ const Comment = ({ comment, postId, isPremium, onReplyAdded, depth = 0 }) => {
       <p className="text-sm text-gray-500 mt-2">
         By {comment.author} on {new Date(comment.created_at).toLocaleDateString()}
       </p>
-      {user && (
+      {user && ( // Only show Reply button if user is logged in
         <Button onClick={() => setIsReplying(!isReplying)} className="mt-2">
           {isReplying ? 'Cancel' : 'Reply'}
         </Button>
@@ -74,7 +74,6 @@ const CommentSection = ({ postId, isPremium }) => {
     try {
       const endpoint = isPremium ? `premium/${postId}/comments/` : `posts/${postId}/comments/`;
       const response = await api.get(endpoint);
-      console.log('Fetched comments:', response.data); // Add this line
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -115,19 +114,13 @@ const CommentSection = ({ postId, isPremium }) => {
       {comments.map((comment) => (
         <Comment
           key={comment.id}
-          comment={{
-            id: comment.id,
-            text: comment.text || comment.content, // Handle both 'text' and 'content' fields
-            author: comment.author || comment.user?.username || 'Anonymous', // Handle different author fields
-            created_at: comment.created_at,
-            replies: comment.replies || []
-          }}
+          comment={comment}
           postId={postId}
           isPremium={isPremium}
           onReplyAdded={handleReplyAdded}
         />
       ))}
-      {user && (
+      {user ? (
         <form onSubmit={handleSubmit} className="mt-4">
           <textarea
             value={newComment}
@@ -138,6 +131,8 @@ const CommentSection = ({ postId, isPremium }) => {
           />
           <Button type="submit">Post Comment</Button>
         </form>
+      ) : (
+        <p className="mt-4 text-gray-600">Please log in to post a comment.</p>
       )}
     </div>
   );
