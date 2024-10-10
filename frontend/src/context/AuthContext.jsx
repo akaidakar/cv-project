@@ -27,11 +27,17 @@ export const AuthProvider = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
       setIsAuthenticated(true);
-      fetchUserData(storedToken);
+      fetchUserData();
     } else {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchUserData();
+    }
+  }, [token]);
 
   const login = async (username, password) => {
     try {
@@ -40,12 +46,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setIsAuthenticated(true);
-      console.log('Login successful. Token:', newToken, 'isAuthenticated:', true);
-      await fetchUserData(newToken);
+      await fetchUserData();
       return true;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      console.error('Error response:', error.response?.data);
+      throw error;
     }
   };
 
