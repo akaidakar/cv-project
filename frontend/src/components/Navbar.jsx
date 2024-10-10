@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Input } from './ui/input';
@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 export default function Navbar() {
   const { isAuthenticated, user, logout, token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const handleLogout = async () => {
@@ -22,6 +23,18 @@ export default function Navbar() {
     e.preventDefault();
     navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
   };
+
+  const handleSubscribeClick = (e) => {
+    e.preventDefault();
+    console.log('Subscribe button clicked');
+    console.log('Current location:', location);
+    navigate('/subscription');
+    console.log('After navigation, location:', location);
+  };
+
+  React.useEffect(() => {
+    console.log('Location changed:', location);
+  }, [location]);
 
   return (
     <nav className="bg-primary text-primary-foreground">
@@ -39,18 +52,14 @@ export default function Navbar() {
           />
         </form>
         <div className="space-x-4">
-          <Button variant="ghost" asChild>
-            <Link to="/posts">Posts</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/premium">Premium</Link>
-          </Button>
+          <Link to="/posts" className="text-primary-foreground hover:underline">Posts</Link>
+          <Link to="/premium" className="text-primary-foreground hover:underline">Premium</Link>
           {isAuthenticated ? (
             <>
               {user?.username && <span>Welcome, {user.username}</span>}
-              <Button variant="ghost" asChild>
-                <Link to="/subscription">Subscribe</Link>
-              </Button>
+              <a href="/subscription" onClick={handleSubscribeClick} className="text-primary-foreground hover:underline">
+                Subscribe
+              </a>
               <Button variant="secondary" onClick={handleLogout}>
                 Sign Out
               </Button>

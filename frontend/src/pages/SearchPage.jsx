@@ -8,96 +8,93 @@ import { Select } from '../components/ui/select';
 
 const SearchPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('');
-  const [author, setAuthor] = useState('');
   const [results, setResults] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [authors, setAuthors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const location = useLocation();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    setSearchTerm(searchParams.get('q') || '');
-    setCategory(searchParams.get('category') || '');
-    setAuthor(searchParams.get('author') || '');
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchTerm(query);
+      performSearch(query);
+    }
+  }, [location.search]);
 
-    fetchCategories();
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    setSearchTerm(searchParams.get('q') || '');
+    setAuthors([]);
+
     fetchAuthors();
   }, [location]);
 
-  useEffect(() => {
-    if (searchTerm || category || author) {
-      performSearch();
-    }
-  }, [searchTerm, category, author]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('categories/');
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
   const fetchAuthors = async () => {
     try {
+      console.log('Fetching authors...');
       const response = await api.get('authors/');
-      setAuthors(response.data);
+      console.log('Authors response:', response);
+      console.log('Authors data:', response.data);
+      setAuthors(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching authors:', error);
+      setError('Failed to fetch authors');
+      setAuthors([]);
     }
   };
 
-  const performSearch = async () => {
+  const performSearch = async (query = searchTerm) => {
+    setIsLoading(true);
+    setError(null);
     try {
       const response = await api.get('search/', {
-        params: { q: searchTerm, category, author }
+        params: { q: query }
       });
-      setResults(response.data);
+      setResults(response.data.results);
     } catch (error) {
       console.error('Error performing search:', error);
+      setError('Failed to perform search');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Search Posts</h1>
-      <div className="flex space-x-4 mb-6">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        performSearch();
+      }} className="flex space-x-4 mb-6">
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search..."
           className="flex-grow"
         />
-        <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </Select>
-        <Select value={author} onChange={(e) => setAuthor(e.target.value)}>
-          <option value="">All Authors</option>
-          {authors.map(auth => (
-            <option key={auth.id} value={auth.id}>{auth.name}</option>
-          ))}
-        </Select>
-        <Button onClick={performSearch}>Search</Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {results.map(post => (
-          <Card key={post.id}>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Searching...' : 'Search'}
+        </Button>
+      </form>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {results.length > 0 ? (
+        results.map(post => (
+          <Card key={post.id} className="mb-4">
             <CardHeader>
               <CardTitle>{post.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{post.content.substring(0, 100)}...</p>
-              <p className="text-sm mt-2">By {post.author} on {new Date(post.created_at).toLocaleDateString()}</p>
+              <p>{post.content.substring(0, 150)}...</p>
+              <p className="text-sm text-gray-500 mt-2">By {post.author}</p>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        ))
+      ) : (
+        <p>No results found.</p>
+      )}
     </div>
   );
 };
