@@ -173,6 +173,11 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -185,11 +190,13 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
-STRIPE_PUBLIC_KEY = "pk_test_51Q28XmFCBj1jK1JN1ILOAzz5MPQfstMjjfab1Qj1N2OSzNbk4NolSy50DY2uLdE0crVSlK0KJaktwkCTlUP8QWtl00i59P9zNV"
-STRIPE_SECRET_KEY = "sk_test_51Q28XmFCBj1jK1JNaXWa6cS0NbmjoK0VcCJazMDoBL8GASVVqQsDgXyDyyblp38tfOWh55fHKV5OX4ilniIdiYSr00Rqd8fp0d"
-STRIPE_WEBHOOK_SECRET = (
-    "whsec_1b8ea08320962a919f149b57c79e6e0228418eb54232b6bb9878bce8c4229794"
-)
+# Stripe settings
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
+# OpenAI settings
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 REST_AUTH = {
     "USER_DETAILS_SERIALIZER": "blogapp.serializers.CustomUserDetailsSerializer",

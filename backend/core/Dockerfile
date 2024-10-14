@@ -14,14 +14,21 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     python3-dev \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*d
+
+# Install Stripe CLI
+RUN curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | gpg --dearmor | tee /usr/share/keyrings/stripe.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | tee -a /etc/apt/sources.list.d/stripe.list
+RUN apt-get update && apt-get install -y stripe
 
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install pip==23.0.1 && pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --verbose
 
 # Copy project
 COPY . /app/
 
-# Run the application
+# The CMD will be overridden by docker-compose.yml
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

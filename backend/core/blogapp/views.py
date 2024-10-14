@@ -26,6 +26,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
+from rest_framework.views import APIView
+from openai import OpenAI
+from django.conf import settings
+import time
+from django.core.cache import cache
+from rest_framework.throttling import UserRateThrottle
+
 
 logger = logging.getLogger(__name__)
 
@@ -194,3 +201,57 @@ def search_posts(request):
     )
 
     return Response({"results": sorted_results})
+
+
+class SummarizeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    def post(self, request, format=None):
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"error": "Content is required for summarization."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache_key = f"summary_{hash(content)}"
+        cached_summary = cache.get(cache_key)
+        if cached_summary:
+            return Response({"summary": cached_summary}, status=status.HTTP_200_OK)
+
+        max_retries = 3
+        retry_delay = 1
+
+        for attempt in range(max_retries):
+            try:
+                client = OpenAI(api_key=settings.OPENAI_API_KEY)
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a helpful assistant that summarizes blog posts.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Please summarize the following blog post:\n\n{content}",
+                        },
+                    ],
+                    max_tokens=150,
+                    temperature=0.5,
+                )
+
+                summary = response.choices[0].message.content.strip()
+                cache.set(cache_key, summary, timeout=3600)  # Cache for 1 hour
+                return Response({"summary": summary}, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    return Response(
+                        {"error": f"OpenAI API error: {str(e)}"},
+                        status=status.HTTP_502_BAD_GATEWAY,
+                    )

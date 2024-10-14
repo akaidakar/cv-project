@@ -8,6 +8,7 @@ from .views import (
     CommentViewSet,
     PremiumCommentViewSet,
     search_posts,
+    SummarizeAPIView,
 )
 
 router = DefaultRouter()
@@ -29,4 +30,5 @@ urlpatterns = [
         name="premium-comments",
     ),
     path("search/", search_posts, name="search_posts"),
+    path("ai/summarize/", SummarizeAPIView.as_view(), name="summarize"),
 ]
