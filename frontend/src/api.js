@@ -1,7 +1,18 @@
 import axios from 'axios';
 
+const isDevelopment = import.meta.env.MODE === "development";
+const myBaseUrl = isDevelopment ? import.meta.env.VITE_API_BASE_URL_LOCAL : import.meta.env.VITE_API_BASE_URL_DEPLOY;
+
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_BASE_URL_LOCAL:', import.meta.env.VITE_API_BASE_URL_LOCAL);
+console.log('VITE_API_BASE_URL_DEPLOY:', import.meta.env.VITE_API_BASE_URL_DEPLOY);
+console.log('Current baseURL:', myBaseUrl);
+
+const baseURL = import.meta.env.VITE_API_BASE_URL_DEPLOY;
+console.log('API Base URL:', baseURL);
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1/',
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,11 +42,11 @@ api.interceptors.request.use(
 // Response interceptor (keep as is)
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.config.method.toUpperCase(), response.config.url, response.status, response.data);
+    console.log('API Response:', response.config.method.toUpperCase(), response.config.url, response.status, response.headers, response.data);
     return response;
   },
   (error) => {
-    console.error('API Response Error:', error.config?.method.toUpperCase(), error.config?.url, error.response?.status, error.response?.data);
+    console.error('API Response Error:', error.config?.method.toUpperCase(), error.config?.url, error.response?.status, error.response?.headers, error.response?.data);
     return Promise.reject(error);
   }
 );

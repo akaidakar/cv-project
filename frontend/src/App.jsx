@@ -27,46 +27,72 @@ import PremiumBlogPostPage from './pages/PremiumBlogPostPage';
 import EditPostPage from './pages/EditPostPage'; // Create this component if it doesn't exist
 import EditPremiumPostPage from './pages/EditPremiumPostPage';
 
-export const stripePromise = loadStripe('your_stripe_publishable_key').catch(err => {
-  console.error('Failed to load Stripe:', err);
-  return null;
-});
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.log('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>
+        <h1>Something went wrong.</h1>
+        <pre>{this.state.error.toString()}</pre>
+      </div>;
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function App() {
+  console.log('App rendering');
   return (
-    <Router>
-      <AuthProvider>
-        <UserProvider>
-          <Layout> {/* Wrap everything inside the Layout component */}
-            <div className="App">
-              <main className="container mx-auto px-4 py-8">
-                <AnimatePresence mode="wait">
-                  <Routes> 
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/posts" element={<PostList />} />
-                    <Route path="/posts/:id" element={<BlogPostPage />} />
-                    <Route path="/edit-post/:id" element={<EditPostPage />} /> {/* Add this line */}
-                    <Route path="/create-post" element={<CreatePostPage />} />
-                    <Route path="/premium" element={<PremiumPostsPage />} />
-                    <Route path="/create-premium-post" element={<CreatePremiumPostPage />} />
-                    <Route path="/subscription" element={<SubscriptionPage />} />
-                    <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
-                    <Route path="/subscription/cancel" element={<SubscriptionCancelPage />} />
-                    <Route path="/search" element={<SearchPage />} />
-                    <Route path="/premium/:id" element={<PremiumBlogPostPage />} />
-                    <Route path="/edit-premium-post/:id" element={<EditPremiumPostPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </AnimatePresence>
-              </main>
-              <Toaster />
-            </div>
-          </Layout>
-        </UserProvider>
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <UserProvider>
+            <Layout> {/* Wrap everything inside the Layout component */}
+              <div className="App">
+                <main className="container mx-auto px-4 py-8">
+                  <AnimatePresence mode="wait">
+                    <Routes> 
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/posts" element={<PostList />} />
+                      <Route path="/posts/:id" element={<BlogPostPage />} />
+                      <Route path="/edit-post/:id" element={<EditPostPage />} /> {/* Add this line */}
+                      <Route path="/create-post" element={<CreatePostPage />} />
+                      <Route path="/premium" element={<PremiumPostsPage />} />
+                      <Route path="/create-premium-post" element={<CreatePremiumPostPage />} />
+                      <Route path="/subscription" element={<SubscriptionPage />} />
+                      <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
+                      <Route path="/subscription/cancel" element={<SubscriptionCancelPage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/premium/:id" element={<PremiumBlogPostPage />} />
+                      <Route path="/edit-premium-post/:id" element={<EditPremiumPostPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AnimatePresence>
+                </main>
+                <Toaster />
+              </div>
+            </Layout>
+          </UserProvider>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

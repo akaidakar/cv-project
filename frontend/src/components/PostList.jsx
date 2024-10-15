@@ -20,7 +20,13 @@ const PostList = () => {
   const fetchPosts = async () => {
     try {
       const response = await api.get('posts/');
-      setPosts(response.data);
+      console.log('API Response:', response); // Log the entire response
+      if (Array.isArray(response.data)) {
+        setPosts(response.data);
+      } else {
+        console.error('Unexpected data format:', response.data);
+        setError('Received unexpected data format from the server');
+      }
     } catch (error) {
       console.error('Error in fetchPosts:', error);
       setError(`Failed to load posts. Error: ${error.message}`);
