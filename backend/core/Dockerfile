@@ -1,5 +1,5 @@
 # Use Python 3.9
-FROM python:3.9-slim
+FROM python:3.9-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -10,25 +10,37 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    default-jdk \
     gcc \
     libpq-dev \
     python3-dev \
-    curl \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*d
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Stripe CLI
-RUN curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | gpg --dearmor | tee /usr/share/keyrings/stripe.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | tee -a /etc/apt/sources.list.d/stripe.list
-RUN apt-get update && apt-get install -y stripe
+# Debug: List contents of current directory
+RUN pwd && ls -la
 
 # Install Python dependencies
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt --verbose
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY . /app/
+# Copy project files
+COPY . .
 
-# The CMD will be overridden by docker-compose.yml
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Make build.sh executable and run it
+RUN chmod +x build.sh && ./build.sh
+
+# Final stage
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy only necessary files from builder
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /app /app
+
+# Create a non-root user
+RUN useradd -m myuser 
+USER myuser
+
+# Run gunicorn with Uvicorn workers
+CMD ["gunicorn", "core.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:$PORT"]
