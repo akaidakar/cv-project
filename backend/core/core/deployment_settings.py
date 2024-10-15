@@ -42,5 +42,11 @@ DATABASES = {
     "default": dj_database_url.config(
         default=os.environ["DATABASE_URL"],
         conn_max_age=600,
+        conn_health_checks=True,
     )
+}
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    "default": {"hosts": os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")},
 }
