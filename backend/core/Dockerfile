@@ -44,7 +44,7 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m myuser 
 USER myuser
 
-# Run migrations, rebuild search index, and start the server
+# Run migrations, safely rebuild search index, and start the server
 CMD python manage.py migrate && \
-    python manage.py search_index --rebuild -f && \
+    python manage.py safe_search_index && \
     gunicorn core.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
