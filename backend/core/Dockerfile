@@ -44,7 +44,7 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m myuser 
 USER myuser
 
-# Run migrations, safely rebuild search index, and start the server
+# Run migrations, attempt to rebuild search index, and start the server
 CMD python manage.py migrate && \
-    python manage.py safe_search_index && \
+    python manage.py search_index --rebuild -f || echo "Elasticsearch index rebuild failed, continuing..." && \
     gunicorn core.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
