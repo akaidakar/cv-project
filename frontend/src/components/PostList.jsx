@@ -42,11 +42,20 @@ const PostList = () => {
   const handleDelete = async (postId) => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
-        await api.delete(`posts/${postId}/`);
+        const token = localStorage.getItem('token');
+        await api.delete(`posts/${postId}/`, {
+          headers: {
+            Authorization: `Token ${token}`
+          }
+        });
         setPosts(posts.filter(post => post.id !== postId));
       } catch (error) {
         console.error('Error deleting post:', error);
-        setError(`Failed to delete post. Error: ${error.message}`);
+        if (error.response && error.response.status === 403) {
+          setError("You don't have permission to delete this post.");
+        } else {
+          setError(`Failed to delete post. Error: ${error.message}`);
+        }
       }
     }
   };
