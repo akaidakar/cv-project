@@ -49,12 +49,33 @@ class PostViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            self.perform_destroy(instance)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            logger.info(
+                f"User {request.user.username} attempting to delete post with ID: {instance.id}"
+            )
+
+            # Check if the user has permission to delete the post
+            if self.check_object_permissions(request, instance):
+                self.perform_destroy(instance)
+                logger.info(f"Successfully deleted post with ID: {instance.id}")
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                logger.warning(
+                    f"User {request.user.username} denied permission to delete post with ID: {instance.id}"
+                )
+                return Response(
+                    {"error": "You do not have permission to delete this post."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        except Post.DoesNotExist:
+            logger.error(f"Post with ID {kwargs.get('pk')} not found")
+            return Response(
+                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             logger.error(f"Error deleting post: {str(e)}", exc_info=True)
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     def perform_destroy(self, instance):
