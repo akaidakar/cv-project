@@ -2,36 +2,50 @@
 import api from './api';
 
 export const userLogin = async (username, password) => {
-  console.log('userLogin function called'); // Debug log
-  // Your login logic here
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Login failed');
+  console.log('userLogin function called');
+  try {
+    const response = await api.post('dj-rest-auth/login/', { username, password });
+    console.log('Login response:', response.data);
+    localStorage.setItem('token', response.data.key);
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error.response?.data || error.message);
+    throw error;
   }
-
-  const data = await response.json();
-  // You might want to save the token in localStorage here
-  localStorage.setItem('token', data.token);
-  return data;
 };
 
 export const register = async (username, email, password1, password2) => {
-  const response = await api.post('dj-rest-auth/registration/', { username, email, password1, password2 });
-  return response.data;
+  try {
+    const response = await api.post('dj-rest-auth/registration/', { username, email, password1, password2 });
+    console.log('Registration response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Registration error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const logout = async () => {
-  const response = await api.post('dj-rest-auth/logout/');
-  return response.data;
+  try {
+    const response = await api.post('dj-rest-auth/logout/');
+    console.log('Logout response:', response.data);
+    localStorage.removeItem('token');
+    return response.data;
+  } catch (error) {
+    console.error('Logout error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
-// Add other functions as needed, e.g., password reset, user details, etc.
+export const fetchUserData = async () => {
+  try {
+    const response = await api.get('dj-rest-auth/user/');
+    console.log('User data received:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user data:', error.response?.data || error.message);
+    throw error;
+  }
+};
 
-console.log('authService loaded, userLogin:', userLogin);
+console.log('authService loaded');

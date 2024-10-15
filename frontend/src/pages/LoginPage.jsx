@@ -18,17 +18,12 @@ export default function LoginPage() {
     console.log('Submit button clicked');
     try {
       console.log('Attempting to login...');
-      const success = await login(username, password);
-      
-      if (success) {
-        toast({
-          title: 'Success',
-          description: 'You have successfully logged in.',
-        });
-        navigate('/');
-      } else {
-        throw new Error('Login failed');
-      }
+      await login(username, password);
+      toast({
+        title: 'Success',
+        description: 'You have successfully logged in.',
+      });
+      navigate('/');
     } catch (error) {
       console.error('Login error:', error);
       toast({

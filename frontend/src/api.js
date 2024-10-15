@@ -32,6 +32,9 @@ api.interceptors.request.use(
         const cleanToken = token.replace(/^["'](.+(?=["']$))["']$/, '$1');
         config.headers['Authorization'] = `Token ${cleanToken}`;
       }
+    } else {
+      // Remove Authorization header for dj-rest-auth requests
+      delete config.headers['Authorization'];
     }
     
     console.log('API interceptor - Final headers:', config.headers);

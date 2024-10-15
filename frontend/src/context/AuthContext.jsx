@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import api from '../api';
+import { userLogin, register as authRegister, logout as authLogout, fetchUserData as authFetchUserData } from '../authService';
 
 const AuthContext = createContext(null);
 
@@ -11,12 +11,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserData = async () => {
     try {
-      console.log('Fetching user data...');
-      const response = await api.get('dj-rest-auth/user/');
-      console.log('User data received:', response.data);
-      setUser(response.data);
-      console.log('User state updated:', response.data);
-      return response.data;
+      const userData = await authFetchUserData();
+      setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
@@ -28,89 +25,46 @@ export const AuthProvider = ({ children }) => {
       setToken(storedToken);
       setIsAuthenticated(true);
       fetchUserData();
-    } else {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchUserData();
-    }
-  }, [token]);
 
   const login = async (username, password) => {
     try {
-      const response = await api.post('dj-rest-auth/login/', { username, password });
-      const newToken = response.data.key;
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
+      const data = await userLogin(username, password);
+      setToken(data.key);
       setIsAuthenticated(true);
       await fetchUserData();
       return true;
     } catch (error) {
       console.error('Login error:', error);
-      console.error('Error response:', error.response?.data);
       throw error;
     }
   };
 
   const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/dj-rest-auth/registration/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password1: password, password2: password }),
-      });
-
-      // Check if the response status is in the successful range (200-299)
-      if (response.ok) {
-        // Try to parse the response as JSON
-        try {
-          const data = await response.json();
-          const newToken = data.key;
-          if (newToken) {
-            localStorage.setItem('token', newToken);
-            setToken(newToken);
-            await fetchUserData();
-          }
-        } catch (jsonError) {
-          console.log('Response is not JSON, but registration was successful');
-        }
-        return true;
-      } else {
-        // Handle error responses
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-          const errorData = await response.json();
-          const errorMessages = Object.entries(errorData)
-            .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-            .join('; ');
-          throw new Error(errorMessages || 'Registration failed');
-        } else {
-          const textData = await response.text();
-          console.error('Received non-JSON error response:', textData);
-          throw new Error('Registration failed. Please try again.');
-        }
-      }
+      const data = await authRegister(username, email, password, password);
+      setToken(data.key);
+      setIsAuthenticated(true);
+      await fetchUserData();
+      return true;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setIsAuthenticated(false);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await authLogout();
+      setToken(null);
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
-
-  useEffect(() => {
-    console.log('AuthContext - Current state:', { isAuthenticated, token });
-  }, [isAuthenticated, token]);
 
   const value = {
     user,
@@ -118,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    isAuthenticated: !!token,
+    isAuthenticated,
     fetchUserData,
   };
 

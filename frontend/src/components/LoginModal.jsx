@@ -17,13 +17,15 @@ const LoginModal = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await userLogin(username, password); // Use the userLogin function from authService
-      console.log(data); // Log the response data
-      login({ token: data.key, user: data.user });
-      navigate('/'); // Redirect to homepage after login
-      onClose(); // Close the modal
+      await login(username, password);
+      toast({
+        title: 'Success',
+        description: 'You have successfully logged in.',
+      });
+      navigate('/');
+      onClose();
     } catch (error) {
-      console.error(error); // Log the error
+      console.error('Login error:', error);
       toast({
         title: 'Error',
         description: 'Login failed. Please check your credentials and try again.',
