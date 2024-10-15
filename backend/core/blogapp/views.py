@@ -50,7 +50,10 @@ class PostViewSet(viewsets.ModelViewSet):
         try:
             instance = self.get_object()
             logger.info(
-                f"User {request.user.username} attempting to delete post with ID: {instance.id}"
+                f"User {request.user.username} (ID: {request.user.id}) attempting to delete post with ID: {instance.id}"
+            )
+            logger.info(
+                f"Post author: {instance.author.username} (ID: {instance.author.id})"
             )
 
             # Check if the user has permission to delete the post
@@ -66,11 +69,6 @@ class PostViewSet(viewsets.ModelViewSet):
                     {"error": "You do not have permission to delete this post."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-        except Post.DoesNotExist:
-            logger.error(f"Post with ID {kwargs.get('pk')} not found")
-            return Response(
-                {"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND
-            )
         except Exception as e:
             logger.error(f"Error deleting post: {str(e)}", exc_info=True)
             return Response(

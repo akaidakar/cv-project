@@ -98,12 +98,13 @@ LOGGING = {
     },
     "handlers": {
         "file": {
-            "level": "ERROR",
+            "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "error.log"),
+            "filename": os.path.join(BASE_DIR, "debug.log"),
+            "formatter": "verbose",
         },
         "console": {
-            "level": "ERROR",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
@@ -111,12 +112,12 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["file", "console"],
-            "level": "ERROR",
+            "level": "INFO",
             "propagate": True,
         },
         "blogapp": {
             "handlers": ["file", "console"],
-            "level": "ERROR",
+            "level": "INFO",
             "propagate": True,
         },
     },

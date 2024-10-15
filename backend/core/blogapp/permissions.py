@@ -13,7 +13,12 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.author == request.user
+
+        is_author = obj.author == request.user
+        logger.info(
+            f"IsAuthorOrReadOnly check: User {request.user.username} (ID: {request.user.id}), Post author {obj.author.username} (ID: {obj.author.id}), Is author: {is_author}"
+        )
+        return is_author
 
 
 class IsPremium(permissions.BasePermission):
