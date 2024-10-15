@@ -2,7 +2,7 @@
 import api from './api';
 
 export const userLogin = async (username, password) => {
-  console.log('userLogin function called');
+  console.log('userLogin function called with:', { username, password });
   try {
     const response = await api.post('dj-rest-auth/login/', { username, password });
     console.log('Login response:', response.data);
@@ -10,6 +10,7 @@ export const userLogin = async (username, password) => {
     return response.data;
   } catch (error) {
     console.error('Login error:', error.response?.data || error.message);
+    console.error('Full error object:', error);
     throw error;
   }
 };

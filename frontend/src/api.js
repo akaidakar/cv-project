@@ -24,13 +24,10 @@ api.interceptors.request.use(
     console.log('API Request:', config.method.toUpperCase(), config.url, config.data);
     console.log('API interceptor - Request URL:', config.url);
     
-    if (!config.url.includes('dj-rest-auth')) {  // Don't add token for dj-rest-auth requests
+    if (!config.url.includes('dj-rest-auth/login/') && !config.url.includes('dj-rest-auth/registration/')) {
       const token = localStorage.getItem('token');
-      console.log('API interceptor - Token from localStorage:', token);
       if (token) {
-        // Remove any quotes around the token if present
-        const cleanToken = token.replace(/^["'](.+(?=["']$))["']$/, '$1');
-        config.headers['Authorization'] = `Token ${cleanToken}`;
+        config.headers['Authorization'] = `Token ${token}`;
       }
     } else {
       // Remove Authorization header for dj-rest-auth requests
