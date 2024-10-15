@@ -52,5 +52,13 @@ ELASTICSEARCH_DSL = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "https://cv-project-1.onrender.com"  # Add this line for Vite dev server  # Add this line for Vite dev server
+    "https://cv-project-1.onrender.com",
+    "https://cv-project-wfk4.onrender.com",  # Add your frontend URL
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://cv-project-1.onrender.com",
+    "https://cv-project-wfk4.onrender.com",  # Add your frontend URL
 ]

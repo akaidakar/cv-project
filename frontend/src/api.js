@@ -8,7 +8,7 @@ console.log('VITE_API_BASE_URL_LOCAL:', import.meta.env.VITE_API_BASE_URL_LOCAL)
 console.log('VITE_API_BASE_URL_DEPLOY:', import.meta.env.VITE_API_BASE_URL_DEPLOY);
 console.log('Current baseURL:', myBaseUrl);
 
-const baseURL = import.meta.env.VITE_API_BASE_URL_DEPLOY;
+const baseURL = myBaseUrl;
 console.log('API Base URL:', baseURL);
 
 const api = axios.create({
