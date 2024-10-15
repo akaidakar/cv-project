@@ -52,6 +52,5 @@ ELASTICSEARCH_DSL = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}",
-    "http://localhost:5173",  # Add this line for Vite dev server
+    "https://cv-project-1.onrender.com"  # Add this line for Vite dev server  # Add this line for Vite dev server
 ]
