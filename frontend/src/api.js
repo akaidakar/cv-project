@@ -22,14 +22,18 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log('API Request:', config.method.toUpperCase(), config.url, config.data);
-    const token = localStorage.getItem('token');
     console.log('API interceptor - Request URL:', config.url);
-    console.log('API interceptor - Token from localStorage:', token);
-    if (token) {
-      // Remove any quotes around the token if present
-      const cleanToken = token.replace(/^["'](.+(?=["']$))["']$/, '$1');
-      config.headers['Authorization'] = `Token ${cleanToken}`;
+    
+    if (!config.url.includes('dj-rest-auth')) {  // Don't add token for dj-rest-auth requests
+      const token = localStorage.getItem('token');
+      console.log('API interceptor - Token from localStorage:', token);
+      if (token) {
+        // Remove any quotes around the token if present
+        const cleanToken = token.replace(/^["'](.+(?=["']$))["']$/, '$1');
+        config.headers['Authorization'] = `Token ${cleanToken}`;
+      }
     }
+    
     console.log('API interceptor - Final headers:', config.headers);
     return config;
   },
