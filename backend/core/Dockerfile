@@ -1,5 +1,5 @@
-# Use Python 3.9
-FROM python:3.9-slim as builder
+# Use Python 3.12
+FROM python:3.12-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -29,7 +29,7 @@ COPY . .
 RUN chmod +x build.sh && ./build.sh
 
 # Final stage
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
