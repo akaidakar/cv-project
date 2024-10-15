@@ -32,6 +32,7 @@ from django.conf import settings
 import time
 from django.core.cache import cache
 from rest_framework.throttling import UserRateThrottle
+from django.core.exceptions import ImproperlyConfigured
 
 
 logger = logging.getLogger(__name__)
@@ -225,6 +226,9 @@ class SummarizeAPIView(APIView):
 
         for attempt in range(max_retries):
             try:
+                if not settings.OPENAI_API_KEY:
+                    raise ImproperlyConfigured("OPENAI_API_KEY is not set in settings")
+
                 client = OpenAI(api_key=settings.OPENAI_API_KEY)
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -246,12 +250,21 @@ class SummarizeAPIView(APIView):
                 cache.set(cache_key, summary, timeout=3600)  # Cache for 1 hour
                 return Response({"summary": summary}, status=status.HTTP_200_OK)
 
+            except ImproperlyConfigured as e:
+                logger.error(f"OpenAI API key configuration error: {str(e)}")
+                return Response(
+                    {"error": "OpenAI API key is not properly configured."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
             except Exception as e:
+                logger.error(f"OpenAI API error (attempt {attempt + 1}): {str(e)}")
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff
                 else:
                     return Response(
-                        {"error": f"OpenAI API error: {str(e)}"},
-                        status=status.HTTP_502_BAD_GATEWAY,
+                        {
+                            "error": "Unable to generate summary. Please try again later."
+                        },
+                        status=status.HTTP_503_SERVICE_UNAVAILABLE,
                     )
