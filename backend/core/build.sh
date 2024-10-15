@@ -5,9 +5,8 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --noinput
 
-if [[$CREATE_SUPERUSER]];
-then
-    python manage.py createsuperuser --no-input
+if [ "$CREATE_SUPERUSER" = "true" ]; then
+    python manage.py createsuperuser --noinput
 fi
 
 # Remove the following lines:
