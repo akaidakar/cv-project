@@ -40,6 +40,10 @@ const PostList = () => {
   };
 
   const handleDelete = async (postId) => {
+    const postToDelete = posts.find(post => post.id === postId);
+    console.log('Current user:', user);
+    console.log('Post author:', postToDelete.author);
+    
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
         const token = localStorage.getItem('token');

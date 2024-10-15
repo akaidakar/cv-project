@@ -28,10 +28,14 @@ api.interceptors.request.use(
       const token = localStorage.getItem('token');
       if (token) {
         config.headers['Authorization'] = `Token ${token}`;
+        console.log('Token being sent:', token);
+      } else {
+        console.log('No token found in localStorage');
       }
     } else {
       // Remove Authorization header for dj-rest-auth requests
       delete config.headers['Authorization'];
+      console.log('Authorization header removed for auth request');
     }
     
     console.log('API interceptor - Final headers:', config.headers);
