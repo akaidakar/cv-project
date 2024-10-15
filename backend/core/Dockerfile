@@ -22,9 +22,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Make build.sh executable and run it
-RUN chmod +x build.sh && ./build.sh
-
 # Final stage
 FROM python:3.12-slim
 
@@ -40,11 +37,9 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
-RUN useradd -m myuser 
-USER myuser
+# Make build.sh executable
+RUN chmod +x build.sh
 
-# Run migrations, attempt to rebuild search index, and start the server
-CMD python manage.py migrate && \
-    python manage.py search_index --rebuild -f || echo "Elasticsearch index rebuild failed, continuing..." && \
+# Run build script and start the server
+CMD ./build.sh && \
     gunicorn core.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
