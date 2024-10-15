@@ -50,3 +50,8 @@ DATABASES = {
 ELASTICSEARCH_DSL = {
     "default": {"hosts": os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")},
 }
+
+CORS_ALLOWED_ORIGINS = [
+    f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}",
+    "http://localhost:5173",  # Add this line for Vite dev server
+]
